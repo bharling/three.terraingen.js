@@ -1,7 +1,8 @@
 (function(THREE){
 	
-	var noisegen = new THREE.terraingen.MersenneTwisterProvider();
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 12, 0.2);
+	var noisegen = new THREE.terraingen.MersenneTwisterProvider(123456);
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 8, 0.2);
+	hmGen.filters = [ new THREE.terraingen.filters.LowPass(0.5) ]
 	
 	function remapValUnsigned ( val ) {
 		return (val + 1.0) * 0.5;
@@ -32,7 +33,7 @@
 			var hgt = 0.0; 
 
 				
-			hgt += remapValUnsigned( hmGen.getHeightAt(_x,_y) );
+			hgt += hmGen.getHeightAt(_x,_y);
 
 
 			var pix = Math.floor( (hgt) * 256 );

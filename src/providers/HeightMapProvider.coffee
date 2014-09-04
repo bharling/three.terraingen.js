@@ -1,8 +1,13 @@
 class THREE.terraingen.HeightMapProvider
+  filters : []
+  
+  
 	constructor : (@RNGFunction=Math.random) ->
 	  
 	getHeightAt : (x, y) ->
 	  @RNGFunction()
+	  
+	
 	  
 	  
 	  
@@ -15,7 +20,7 @@ class THREE.terraingen.SineWaveHeightMapProvider extends THREE.terraingen.Height
 
 {floor, sqrt} = Math
 
-class THREE.terraingen.PerlinHeightMapProvider
+class THREE.terraingen.PerlinHeightMapProvider extends THREE.terraingen.HeightMapProvider
   grad3: [
     [1,1, 0], [-1,1, 0], [1,-1,0], [-1,-1,0], [1,0, 1], [-1, 0, 1]
     [1,0,-1], [-1,0,-1], [0, 1,1], [ 0,-1,1], [0,1,-1], [ 0,-1,-1]
@@ -56,6 +61,10 @@ class THREE.terraingen.PerlinHeightMapProvider
       x *= 2.0
       y *= 2.0
       amplitude *= 0.5
+    # remap into 0..1 range  
+    hgt = (hgt+1.0) * 0.5
+    for filter in @filters
+      hgt = filter.apply hgt
     hgt
       
  

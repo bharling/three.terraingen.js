@@ -4,17 +4,22 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   THREE.terraingen.HeightMapProvider = (function() {
-    function HeightMapProvider(RNGFunction) {
-      this.RNGFunction = RNGFunction != null ? RNGFunction : Math.random;
-    }
+    function HeightMapProvider() {}
 
-    HeightMapProvider.prototype.getHeightAt = function(x, y) {
-      return this.RNGFunction();
-    };
+    HeightMapProvider.prototype.filters = [];
 
     return HeightMapProvider;
 
   })();
+
+  ({
+    constructor: function(RNGFunction) {
+      this.RNGFunction = RNGFunction != null ? RNGFunction : Math.random;
+    },
+    getHeightAt: function(x, y) {
+      return this.RNGFunction();
+    }
+  });
 
   THREE.terraingen.SineWaveHeightMapProvider = (function(_super) {
     __extends(SineWaveHeightMapProvider, _super);
@@ -34,7 +39,9 @@
 
   floor = Math.floor, sqrt = Math.sqrt;
 
-  THREE.terraingen.PerlinHeightMapProvider = (function() {
+  THREE.terraingen.PerlinHeightMapProvider = (function(_super) {
+    __extends(PerlinHeightMapProvider, _super);
+
     PerlinHeightMapProvider.prototype.grad3 = [[1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0], [1, 0, 1], [-1, 0, 1], [1, 0, -1], [-1, 0, -1], [0, 1, 1], [0, -1, 1], [0, 1, -1], [0, -1, -1]];
 
     PerlinHeightMapProvider.prototype.simplex = [[0, 1, 2, 3], [0, 1, 3, 2], [0, 0, 0, 0], [0, 2, 3, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 2, 3, 0], [0, 2, 1, 3], [0, 0, 0, 0], [0, 3, 1, 2], [0, 3, 2, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 3, 2, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 2, 0, 3], [0, 0, 0, 0], [1, 3, 0, 2], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 3, 0, 1], [2, 3, 1, 0], [1, 0, 2, 3], [1, 0, 3, 2], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 0, 3, 1], [0, 0, 0, 0], [2, 1, 3, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 0, 1, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 0, 1, 2], [3, 0, 2, 1], [0, 0, 0, 0], [3, 1, 2, 0], [2, 1, 0, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 1, 0, 2], [0, 0, 0, 0], [3, 2, 0, 1], [3, 2, 1, 0]];
@@ -68,7 +75,7 @@
     };
 
     PerlinHeightMapProvider.prototype.getHeightAt = function(x, y) {
-      var amplitude, hgt, o, _i, _ref1;
+      var amplitude, filter, hgt, o, _i, _j, _len, _ref1, _ref2;
       hgt = 0.0;
       amplitude = 1.0;
       x *= this.scale;
@@ -78,6 +85,12 @@
         x *= 2.0;
         y *= 2.0;
         amplitude *= 0.5;
+      }
+      hgt = (hgt + 1.0) * 0.5;
+      _ref2 = this.filters;
+      for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
+        filter = _ref2[_j];
+        hgt = filter.apply(hgt);
       }
       return hgt;
     };
@@ -136,6 +149,6 @@
 
     return PerlinHeightMapProvider;
 
-  })();
+  })(THREE.terraingen.HeightMapProvider);
 
 }).call(this);
