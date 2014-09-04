@@ -1,5 +1,6 @@
 (function() {
-  var __hasProp = {}.hasOwnProperty,
+  var BTT,
+    __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   THREE.terraingen.GeometryProvider = (function() {
@@ -21,6 +22,204 @@
     return GeometryProvider;
 
   })();
+
+  BTT = (function() {
+    BTT.prototype.bn = null;
+
+    BTT.prototype.ln = null;
+
+    BTT.prototype.rn = null;
+
+    BTT.prototype.lc = null;
+
+    BTT.prototype.rc = null;
+
+    BTT.prototype.depth = 0;
+
+    BTT.prototype.has_children = false;
+
+    function BTT(parent) {
+      this.parent = parent != null ? parent : null;
+    }
+
+    BTT.prototype.split = function() {
+      if (this.hasChildren) {
+        return;
+      }
+      if (this.bn != null) {
+        if (this.bn.bn !== this) {
+          this.bn.split();
+        }
+        this.bn.split2();
+        this.split2();
+        this.lc.rn = this.bn.rc;
+        this.rc.ln = this.bn.lc;
+        this.bn.lc.rn = this.rc;
+        this.bn.rc.ln = this.lc;
+      } else {
+        this.split2();
+        this.lc.rn = null;
+        this.rc.ln = null;
+      }
+    };
+
+    BTT.prototype.split2 = function() {
+      if (this.hasChildren) {
+        return;
+      }
+      this.lc = new BTT(this);
+      this.rc = new BTT(this);
+      this.hasChildren = true;
+      this.lc.ln = this.rc;
+      this.rc.rn = this.lc;
+      this.lc.bn = this.ln;
+      if (this.ln != null) {
+        if (this.ln.bn === this) {
+          this.ln.bn = this.lc;
+        } else {
+          if (this.ln.ln === this) {
+            this.ln.ln = this.lc;
+          } else {
+            this.ln.rn = this.lc;
+          }
+        }
+      }
+      this.rc.bn = this.rn;
+      if (this.rn != null) {
+        if (this.rn.bn === this) {
+          this.rn.bn = this;
+        } else {
+          if (this.rn.rn === this) {
+            this.rn.rn = this.rc;
+          } else {
+            this.rn.ln = this.rc;
+          }
+        }
+      }
+    };
+
+    return BTT;
+
+  })();
+
+  THREE.terraingen.ROAMGeometryProvider = (function(_super) {
+    __extends(ROAMGeometryProvider, _super);
+
+    ROAMGeometryProvider.prototype.left_root = new BTT();
+
+    ROAMGeometryProvider.prototype.right_root = new BTT();
+
+    function ROAMGeometryProvider(x, y, width, height, max_variance) {
+      this.x = x != null ? x : 0;
+      this.y = y != null ? y : 0;
+      this.width = width != null ? width : 256;
+      this.height = height != null ? height : 256;
+      this.max_variance = max_variance != null ? max_variance : 0.02;
+      this.left_root.bn = this.right_root;
+      this.right_root.bn = this.left_root;
+    }
+
+    ROAMGeometryProvider.prototype._getVariance = function(apX, apY, lfX, lfY, rtX, rtY) {
+      var avgHeight, cX, cY, heightA, heightB, realHeight;
+      heightA = this.heightMapProvider.getHeightAt(lfX, lfY);
+      heightB = this.heightMapProvider.getHeightAt(rtX, rtY);
+      avgHeight = (heightA + heightB) * 0.5;
+      cX = (lfX + rtX) >> 1;
+      cY = (lfY + rtY) >> 1;
+      realHeight = this.heightMapProvider.getHeightAt(cX, cY);
+      return Math.abs(realHeight - avgHeight);
+    };
+
+    ROAMGeometryProvider.prototype._traverseVarianceIndex = function(apX, apY, lfX, lfY, rtX, rtY, depth, maxdepth) {
+      var cX, cY, ret, v;
+      v = this._getVariance(apX, apY, lfX, lfY, rtX, rtY);
+      cX = (lfX + rtX) >> 1;
+      cY = (lfY + rtY) >> 1;
+      if (depth <= maxdepth) {
+        v = Math.max(v, this._getVariance(cX, cY, apX, apY, lfX, lfY));
+        v = Math.max(v, this._getVariance(cX, cY, rtX, rtY, apX, apY));
+      }
+      ret = v > this.max_variance ? "1" : "0";
+      if (depth >= maxdepth && ret === "0") {
+        return "0";
+      }
+      ret += this._traverseVarianceIndex(cX, cY, apX, apY, lfX, lfY, depth + 1, maxdepth);
+      ret += this._traverseVarianceIndex(cX, cY, rtX, rtY, apX, apY, depth + 1, maxdepth);
+      return ret;
+    };
+
+    ROAMGeometryProvider.prototype._buildVarianceIndex = function(lod) {
+      var leftIndex, rightIndex;
+      if (lod == null) {
+        lod = 8;
+      }
+      leftIndex = this._traverseVarianceIndex(0, 0, 0, this.height, this.width, 0, 0, lod);
+      rightIndex = this._traverseVarianceIndex(this.width, this.height, this.width, 0, 0, this.height, 0, lod);
+      return rightIndex + leftIndex;
+    };
+
+    ROAMGeometryProvider.prototype.createTree = function(node, apX, apY, lfX, lfY, rtX, rtY, depth, maxdepth) {
+      var cX, cY, split, v;
+      v = this._getVariance(apX, apY, lfX, lfY, rtX, rtY);
+      cX = (lfX + rtX) >> 1;
+      cY = (lfY + rtY) >> 1;
+      if (depth <= maxdepth) {
+        v = Math.max(v, this._getVariance(cX, cY, apX, apY, lfX, lfY));
+        v = Math.max(v, this._getVariance(cX, cY, rtX, rtY, apX, apY));
+      }
+      split = v > this.max_variance;
+      if (split) {
+        node.split();
+      }
+      if (node.hasChildren) {
+        this.createTree(node.lc, cX, cY, apX, apY, lfX, lfY, depth + 1, maxdepth);
+        this.createTree(node.rc, cX, cY, rtX, rtY, apX, apY, depth + 1, maxdepth);
+      }
+    };
+
+    ROAMGeometryProvider.prototype.createGeom = function(node, apX, apY, lfX, lfY, rtX, rtY) {
+      var apHeight, cX, cY, ind, lfHeight, rtHeight;
+      if (node.hasChildren) {
+        cX = (lfX + rtX) >> 1;
+        cY = (lfY + rtY) >> 1;
+        this.createGeom(node.lc, cX, cY, apX, apY, lfX, lfY);
+        return this.createGeom(node.rc, cX, cY, rtX, rtY, apX, apY);
+      } else {
+        ind = this.geometry.vertices.length - 1;
+        apHeight = this.heightMapProvider.getHeightAt(apX, apY);
+        lfHeight = this.heightMapProvider.getHeightAt(lfX, lfY);
+        rtHeight = this.heightMapProvider.getHeightAt(rtX, rtY);
+        this.geometry.vertices.push(new THREE.Vector3(apX, apHeight, apY));
+        this.geometry.vertices.push(new THREE.Vector3(lfX, lfHeight, lfY));
+        this.geometry.vertices.push(new THREE.Vector3(rtX, rtHeight, rtY));
+        return this.geometry.faces.push(new THREE.Face3(ind + 1, ind + 2, ind + 3));
+      }
+    };
+
+    ROAMGeometryProvider.prototype._buildSplits = function(lod) {
+      if (lod == null) {
+        lod = 8;
+      }
+      this.createTree(this.left_root, 0, 0, 0, this.height, this.width, 0, 0, lod);
+      return this.createTree(this.right_root, this.width, this.height, this.width, 0, 0, this.height, 0, lod);
+    };
+
+    ROAMGeometryProvider.prototype._buildGeometry = function() {
+      this.geometry = new THREE.Geometry();
+      this.createGeom(this.left_root, 0, 0, 0, this.height, this.width, 0);
+      return this.createGeom(this.right_root, this.width, this.height, this.width, 0, 0, this.height, 0);
+    };
+
+    ROAMGeometryProvider.prototype.get = function() {
+      console.log(this._buildVarianceIndex());
+      this._buildSplits();
+      this._buildGeometry();
+      return this.geometry;
+    };
+
+    return ROAMGeometryProvider;
+
+  })(THREE.terraingen.GeometryProvider);
 
   THREE.terraingen.GridGeometryProvider = (function(_super) {
     __extends(GridGeometryProvider, _super);

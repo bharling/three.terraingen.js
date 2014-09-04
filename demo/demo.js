@@ -1,8 +1,9 @@
 (function(THREE){
 	var container, camera, scene, renderer;
-	var noisegen = new THREE.terraingen.MersenneTwisterProvider(2);
+	var noisegen = new THREE.terraingen.MersenneTwisterProvider(5656);
 	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 8, 0.004);
-	var geomProvider = new THREE.terraingen.GridGeometryProvider();
+	var geomProvider = new THREE.terraingen.ROAMGeometryProvider();
+	geomProvider.segments = 32;
 	geomProvider.heightMapProvider = hmGen;
 	var meshProvider = new THREE.terraingen.MeshProvider();
 	meshProvider.geometryProvider = geomProvider;	
@@ -12,11 +13,13 @@
 	
 	var mesh = meshProvider.get();
 	
-	mesh.scale.x = mesh.scale.y = mesh.scale.z = 10;
-	mesh.scale.y = 400;
+	mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
+	mesh.scale.y = 2;
 	
 	
 	scene.add(mesh);
+	
+	mesh.rotation.x = 4
 	//drawHeightMap( hmGen );
 	
 	
@@ -79,7 +82,8 @@
  		var time = Date.now() * 0.001;
 
 
-		mesh.rotation.y = time * 0.5;
+		//mesh.rotation.y = time * 0.2;
+		
 
 		renderer.render( scene, camera );
  	}
