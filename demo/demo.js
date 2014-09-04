@@ -1,7 +1,7 @@
 (function(THREE){
 	
 	var noisegen = new THREE.terraingen.MersenneTwisterProvider();
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 8);
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 12, 0.2);
 	
 	function remapValUnsigned ( val ) {
 		return (val + 1.0) * 0.5;

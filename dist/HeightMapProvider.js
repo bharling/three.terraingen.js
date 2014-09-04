@@ -39,10 +39,11 @@
 
     PerlinHeightMapProvider.prototype.simplex = [[0, 1, 2, 3], [0, 1, 3, 2], [0, 0, 0, 0], [0, 2, 3, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 2, 3, 0], [0, 2, 1, 3], [0, 0, 0, 0], [0, 3, 1, 2], [0, 3, 2, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 3, 2, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 2, 0, 3], [0, 0, 0, 0], [1, 3, 0, 2], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 3, 0, 1], [2, 3, 1, 0], [1, 0, 2, 3], [1, 0, 3, 2], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 0, 3, 1], [0, 0, 0, 0], [2, 1, 3, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 0, 1, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 0, 1, 2], [3, 0, 2, 1], [0, 0, 0, 0], [3, 1, 2, 0], [2, 1, 0, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 1, 0, 2], [0, 0, 0, 0], [3, 2, 0, 1], [3, 2, 1, 0]];
 
-    function PerlinHeightMapProvider(RNGFunction, octaves) {
+    function PerlinHeightMapProvider(RNGFunction, octaves, scale) {
       var i, random;
       this.RNGFunction = RNGFunction != null ? RNGFunction : Math.random;
       this.octaves = octaves != null ? octaves : 8;
+      this.scale = scale != null ? scale : 1.0;
       random = this.RNGFunction;
       this.p = (function() {
         var _i, _results;
@@ -67,14 +68,18 @@
     };
 
     PerlinHeightMapProvider.prototype.getHeightAt = function(x, y) {
-      var hgt, o, _i, _ref1;
+      var amplitude, hgt, o, _i, _ref1;
       hgt = 0.0;
+      amplitude = 1.0;
+      x *= this.scale;
+      y *= this.scale;
       for (o = _i = 1, _ref1 = this.octaves; _i < _ref1; o = _i += 1) {
-        hgt += this._getHeightAt(x, y);
+        hgt += (this._getHeightAt(x, y)) * amplitude;
         x *= 2.0;
         y *= 2.0;
+        amplitude *= 0.5;
       }
-      return hgt / this.octaves;
+      return hgt;
     };
 
     PerlinHeightMapProvider.prototype._getHeightAt = function(xin, yin) {

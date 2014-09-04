@@ -37,7 +37,7 @@ class THREE.terraingen.PerlinHeightMapProvider
     [3,1,0,2], [0,0,0,0], [3,2,0,1], [3,2,1,0]
   ]
  
-  constructor: (@RNGFunction=Math.random, @octaves=8) ->
+  constructor: (@RNGFunction=Math.random, @octaves=8, @scale=1.0) ->
     random = @RNGFunction
     @p = (floor(random() * 256) for i in [0...256])
     # To remove the need for index wrapping, double the permutation table length
@@ -48,11 +48,15 @@ class THREE.terraingen.PerlinHeightMapProvider
     
   getHeightAt: (x, y) ->
     hgt = 0.0
+    amplitude = 1.0
+    x*=@scale
+    y*=@scale
     for o in [1 ... @octaves] by 1
-      hgt += @_getHeightAt x, y
+      hgt += (@_getHeightAt x, y) * amplitude
       x *= 2.0
       y *= 2.0
-    hgt / @octaves
+      amplitude *= 0.5
+    hgt
       
  
   _getHeightAt: (xin, yin) ->
