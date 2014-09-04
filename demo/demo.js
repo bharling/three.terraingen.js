@@ -1,7 +1,8 @@
 (function(THREE){
 	var container, camera, scene, renderer;
 	var noisegen = new THREE.terraingen.MersenneTwisterProvider(5656);
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 8, 0.004);
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 3, 0.004);
+	hmGen.filters = [new THREE.terraingen.filters.LowPass(0.5)]
 	var geomProvider = new THREE.terraingen.ROAMGeometryProvider();
 	geomProvider.segments = 32;
 	geomProvider.heightMapProvider = hmGen;
@@ -14,7 +15,7 @@
 	var mesh = meshProvider.get();
 	
 	mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
-	mesh.scale.y = 2;
+	mesh.scale.y = 300;
 	
 	
 	scene.add(mesh);
@@ -54,9 +55,9 @@
  	function bootstrap () {
  		container = document.getElementById('container');
  		
- 		camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 3500);
- 		camera.position.z = 2000;
- 		camera.position.y = 500;
+ 		camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
+ 		camera.position.z = 3000;
+ 		camera.position.y = 300;
  		camera.position.x = 500;
  		
  		scene = new THREE.Scene();

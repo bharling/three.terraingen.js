@@ -114,7 +114,7 @@
       this.y = y != null ? y : 0;
       this.width = width != null ? width : 256;
       this.height = height != null ? height : 256;
-      this.max_variance = max_variance != null ? max_variance : 0.02;
+      this.max_variance = max_variance != null ? max_variance : 0.01;
       this.left_root.bn = this.right_root;
       this.right_root.bn = this.left_root;
     }
@@ -151,7 +151,7 @@
     ROAMGeometryProvider.prototype._buildVarianceIndex = function(lod) {
       var leftIndex, rightIndex;
       if (lod == null) {
-        lod = 8;
+        lod = 16;
       }
       leftIndex = this._traverseVarianceIndex(0, 0, 0, this.height, this.width, 0, 0, lod);
       rightIndex = this._traverseVarianceIndex(this.width, this.height, this.width, 0, 0, this.height, 0, lod);
@@ -168,8 +168,10 @@
         v = Math.max(v, this._getVariance(cX, cY, rtX, rtY, apX, apY));
       }
       split = v > this.max_variance;
-      if (split) {
+      if (split && depth <= maxdepth) {
         node.split();
+      } else {
+        return;
       }
       if (node.hasChildren) {
         this.createTree(node.lc, cX, cY, apX, apY, lfX, lfY, depth + 1, maxdepth);
@@ -198,7 +200,7 @@
 
     ROAMGeometryProvider.prototype._buildSplits = function(lod) {
       if (lod == null) {
-        lod = 8;
+        lod = 12;
       }
       this.createTree(this.left_root, 0, 0, 0, this.height, this.width, 0, 0, lod);
       return this.createTree(this.right_root, this.width, this.height, this.width, 0, 0, this.height, 0, lod);

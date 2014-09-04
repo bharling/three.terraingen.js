@@ -81,7 +81,7 @@ class THREE.terraingen.ROAMGeometryProvider extends THREE.terraingen.GeometryPro
   left_root : new BTT()
   right_root : new BTT()
   
-  constructor:(@x=0, @y=0, @width=256, @height=256, @max_variance=0.02) ->
+  constructor:(@x=0, @y=0, @width=256, @height=256, @max_variance=0.01) ->
     @left_root.bn = @right_root
     @right_root.bn = @left_root
     
@@ -115,7 +115,7 @@ class THREE.terraingen.ROAMGeometryProvider extends THREE.terraingen.GeometryPro
     
     ret
     
-  _buildVarianceIndex: (lod=8) ->
+  _buildVarianceIndex: (lod=16) ->
     leftIndex = @_traverseVarianceIndex 0, 0, 0, @height, @width, 0, 0, lod
     rightIndex = @_traverseVarianceIndex @width, @height, @width, 0, 0, @height, 0, lod
     rightIndex + leftIndex
@@ -128,8 +128,10 @@ class THREE.terraingen.ROAMGeometryProvider extends THREE.terraingen.GeometryPro
       v = Math.max(v, @_getVariance cX, cY, apX, apY, lfX, lfY)
       v = Math.max(v, @_getVariance cX, cY, rtX, rtY, apX, apY)
     split = v > @max_variance
-    if split
+    if split and depth <= maxdepth
       node.split()
+    else
+      return
     if node.hasChildren  
       @createTree node.lc, cX, cY, apX, apY, lfX, lfY, depth+1, maxdepth
       @createTree node.rc, cX, cY, rtX, rtY, apX, apY, depth+1, maxdepth
@@ -153,7 +155,7 @@ class THREE.terraingen.ROAMGeometryProvider extends THREE.terraingen.GeometryPro
       
       @geometry.faces.push new THREE.Face3 ind+1, ind+2, ind+3
      
-  _buildSplits: (lod=8) ->
+  _buildSplits: (lod=12) ->
     @createTree @left_root, 0, 0, 0, @height, @width, 0, 0, lod
     @createTree @right_root, @width, @height, @width, 0, 0, @height, 0, lod
     
