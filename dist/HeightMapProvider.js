@@ -1,5 +1,7 @@
 (function() {
-  var floor, sqrt;
+  var floor, sqrt, _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   THREE.terraingen.HeightMapProvider = (function() {
     function HeightMapProvider(RNGFunction) {
@@ -14,6 +16,22 @@
 
   })();
 
+  THREE.terraingen.SineWaveHeightMapProvider = (function(_super) {
+    __extends(SineWaveHeightMapProvider, _super);
+
+    function SineWaveHeightMapProvider() {
+      _ref = SineWaveHeightMapProvider.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    SineWaveHeightMapProvider.prototype.getHeightAt = function(x, y) {
+      return Math.sin(x);
+    };
+
+    return SineWaveHeightMapProvider;
+
+  })(THREE.terraingen.HeightMapProvider);
+
   floor = Math.floor, sqrt = Math.sqrt;
 
   THREE.terraingen.PerlinHeightMapProvider = (function() {
@@ -21,9 +39,10 @@
 
     PerlinHeightMapProvider.prototype.simplex = [[0, 1, 2, 3], [0, 1, 3, 2], [0, 0, 0, 0], [0, 2, 3, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 2, 3, 0], [0, 2, 1, 3], [0, 0, 0, 0], [0, 3, 1, 2], [0, 3, 2, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 3, 2, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 2, 0, 3], [0, 0, 0, 0], [1, 3, 0, 2], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 3, 0, 1], [2, 3, 1, 0], [1, 0, 2, 3], [1, 0, 3, 2], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 0, 3, 1], [0, 0, 0, 0], [2, 1, 3, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [2, 0, 1, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 0, 1, 2], [3, 0, 2, 1], [0, 0, 0, 0], [3, 1, 2, 0], [2, 1, 0, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 1, 0, 2], [0, 0, 0, 0], [3, 2, 0, 1], [3, 2, 1, 0]];
 
-    function PerlinHeightMapProvider(RNGFunction) {
+    function PerlinHeightMapProvider(RNGFunction, octaves) {
       var i, random;
       this.RNGFunction = RNGFunction != null ? RNGFunction : Math.random;
+      this.octaves = octaves != null ? octaves : 8;
       random = this.RNGFunction;
       this.p = (function() {
         var _i, _results;
@@ -47,7 +66,18 @@
       return g[0] * x + g[1] * y;
     };
 
-    PerlinHeightMapProvider.prototype.getHeightAt = function(xin, yin) {
+    PerlinHeightMapProvider.prototype.getHeightAt = function(x, y) {
+      var hgt, o, _i, _ref1;
+      hgt = 0.0;
+      for (o = _i = 1, _ref1 = this.octaves; _i < _ref1; o = _i += 1) {
+        hgt += this._getHeightAt(x, y);
+        x *= 2.0;
+        y *= 2.0;
+      }
+      return hgt / this.octaves;
+    };
+
+    PerlinHeightMapProvider.prototype._getHeightAt = function(xin, yin) {
       var F2, G2, X0, Y0, gi0, gi1, gi2, i, i1, ii, j, j1, jj, n0, n1, n2, s, t, t0, t1, t2, x0, x1, x2, y0, y1, y2;
       F2 = 0.5 * (sqrt(3.0) - 1.0);
       s = (xin + yin) * F2;

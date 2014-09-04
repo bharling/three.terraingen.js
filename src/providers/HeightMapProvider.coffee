@@ -5,6 +5,12 @@ class THREE.terraingen.HeightMapProvider
 	  @RNGFunction()
 	  
 	  
+	  
+class THREE.terraingen.SineWaveHeightMapProvider extends THREE.terraingen.HeightMapProvider
+  getHeightAt: (x,y) ->
+    Math.sin x
+	  
+	  
 # Code below from https://gist.github.com/sj26/6145489
 
 {floor, sqrt} = Math
@@ -31,7 +37,7 @@ class THREE.terraingen.PerlinHeightMapProvider
     [3,1,0,2], [0,0,0,0], [3,2,0,1], [3,2,1,0]
   ]
  
-  constructor: (@RNGFunction=Math.random) ->
+  constructor: (@RNGFunction=Math.random, @octaves=8) ->
     random = @RNGFunction
     @p = (floor(random() * 256) for i in [0...256])
     # To remove the need for index wrapping, double the permutation table length
@@ -40,8 +46,16 @@ class THREE.terraingen.PerlinHeightMapProvider
   dot: (g, x, y) ->
     g[0] * x + g[1] * y
     
+  getHeightAt: (x, y) ->
+    hgt = 0.0
+    for o in [1 ... @octaves] by 1
+      hgt += @_getHeightAt x, y
+      x *= 2.0
+      y *= 2.0
+    hgt / @octaves
+      
  
-  getHeightAt: (xin, yin) ->
+  _getHeightAt: (xin, yin) ->
     # Skew the input space to determine which simplex cell we're in
     F2 = 0.5*(sqrt(3.0)-1.0)
     s = (xin+yin)*F2 # Hairy factor for 2D

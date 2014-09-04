@@ -1,5 +1,6 @@
 (function() {
-  var THREE,
+  var THREE, _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -8,13 +9,9 @@
   THREE.terraingen = THREE.terraingen || {};
 
   THREE.terraingen.RNGProvider = (function() {
-    function RNGProvider() {
-      this.init();
+    function RNGProvider(seed) {
+      this.random = __bind(this.random, this);
     }
-
-    RNGProvider.prototype.init = function(seed) {
-      this.seed = seed;
-    };
 
     RNGProvider.prototype.random = function() {};
 
@@ -26,7 +23,9 @@
     __extends(BasicRandomProvider, _super);
 
     function BasicRandomProvider() {
-      return BasicRandomProvider.__super__.constructor.apply(this, arguments);
+      this.random = __bind(this.random, this);
+      _ref = BasicRandomProvider.__super__.constructor.apply(this, arguments);
+      return _ref;
     }
 
     BasicRandomProvider.prototype.random = function() {
@@ -40,79 +39,50 @@
   THREE.terraingen.MersenneTwisterProvider = (function(_super) {
     __extends(MersenneTwisterProvider, _super);
 
-    function MersenneTwisterProvider() {
-      return MersenneTwisterProvider.__super__.constructor.apply(this, arguments);
+    MersenneTwisterProvider.prototype.N = 624;
+
+    MersenneTwisterProvider.prototype.FF = 0xFFFFFFFF;
+
+    function MersenneTwisterProvider(seed) {
+      this.random = __bind(this.random, this);
+      var i, s, _i, _ref1;
+      this.mt = [];
+      this.index = 0;
+      this.mt[0] = seed != null ? seed : seed = new Date().getTime();
+      for (i = _i = 1, _ref1 = this.N; 1 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 1 <= _ref1 ? ++_i : --_i) {
+        s = this.mt[i - 1] ^ (this.mt[i - 1] >>> 30);
+        this.mt[i] = ((((((s & 0xffff0000) >>> 16) * 0x6C078965) << 16) + (s & 0xffff) * 0x6C078965) + i) >>> 0;
+      }
     }
 
-    MersenneTwisterProvider.prototype.init = function(seed) {
-      this.seed = seed;
-      if (this.seed == null) {
-        this.seed = new Date().getTime();
-      }
-      this.N = 624;
-      this.M = 39;
-      this.MATRIX_A = 0x9908b0df;
-      this.UPPER_MASK = 0x80000000;
-      this.LOWER_MASK = 0x7fffffff;
-      this.mt = new Array(this.N);
-      this.mti = this.N + 1;
-      return this.init_genrand(this.seed);
-    };
-
     MersenneTwisterProvider.prototype.random = function() {
-      return this.genrand_real1();
+      return this.next() * (1.0 / 4294967295.0);
     };
 
-    MersenneTwisterProvider.prototype.init_genrand = function(s) {
-      var _results;
-      this.mt[0] = s >>> 0;
-      this.mti = 1;
-      _results = [];
-      while (this.mti <= this.N) {
-        s = this.mt[this.mti - 1] ^ (this.mt[this.mti - 1] >>> 30);
-        this.mt[this.mti] = (((((s & 0xffff0000) >>> 16) * 1812433253) << 16) + (s & 0x0000ffff) * 1812433253) + this.mti;
-        this.mt[this.mti] >>>= 0;
-        _results.push(this.mti++);
+    MersenneTwisterProvider.prototype.next = function() {
+      var y;
+      if (this.index === 0) {
+        this.twist();
       }
-      return _results;
-    };
-
-    MersenneTwisterProvider.prototype.genrand_int31 = function() {
-      return this.genrand_int32() >>> 1;
-    };
-
-    MersenneTwisterProvider.prototype.genrand_real1 = function() {
-      return this.genrand_int32() * (1.0 / 4294967295.0);
-    };
-
-    MersenneTwisterProvider.prototype.genrand_int32 = function() {
-      var kk, mag01, y;
-      mag01 = new Array(0x0, this.MATRIX_A);
-      if (this.mti >= this.N) {
-        kk = 0;
-        if (this.mti === this.N + 1) {
-          this.init_genrand(5489);
-        }
-        while (kk < this.N - this.M) {
-          y = (this.mt[kk] & this.UPPER_MASK) | (this.mt[kk + 1] & this.LOWER_MASK);
-          this.mt[kk] = this.mt[kk + this.M] ^ (y >>> 1) ^ mag01[y & 0x1];
-          kk++;
-        }
-        while (kk < this.N - 1) {
-          y = (this.mt[kk] & this.UPPER_MASK) | (this.mt[kk + 1] & this.LOWER_MASK);
-          this.mt[kk] = this.mt[kk + (this.M - this.N)] ^ (y >>> 1) ^ mag01[y & 0x1];
-          kk++;
-        }
-        y = (this.mt[this.N - 1] & this.UPPER_MASK) | (this.mt[0] & this.LOWER_MASK);
-        this.mt[this.N - 1] = this.mt[this.M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-        this.mti = 0;
-      }
-      y = this.mt[this.mti++];
-      y ^= y >>> 11;
-      y ^= (y << 7) & 0x9d2c5680;
-      y ^= (y << 15) & 0xefc60000;
-      y ^= y >>> 18;
+      y = this.mt[this.index];
+      y = y ^ (y >>> 11);
+      y = (y ^ ((y << 7) & 0x9D2C5680)) & this.FF;
+      y = (y ^ ((y << 15) & 0xEFC60000)) & this.FF;
+      y = y ^ (y >>> 18);
+      this.index = (this.index + 1) % this.N;
       return y >>> 0;
+    };
+
+    MersenneTwisterProvider.prototype.twist = function() {
+      var i, y, _i, _ref1;
+      for (i = _i = 0, _ref1 = this.N; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+        y = (this.mt[i] & 0x80000000) | (this.mt[(i + 1) % this.N] & 0x7FFFFFFF);
+        this.mt[i] = (this.mt[(i + 397) % this.N] ^ (y >>> 1)) >>> 0;
+        if ((y & 1) !== 0) {
+          this.mt[i] = (this.mt[i] ^ 0x9908B0DF) >>> 0;
+        }
+      }
+      return null;
     };
 
     return MersenneTwisterProvider;
