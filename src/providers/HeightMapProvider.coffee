@@ -14,6 +14,14 @@ class THREE.terraingen.HeightMapProvider
 class THREE.terraingen.SineWaveHeightMapProvider extends THREE.terraingen.HeightMapProvider
   getHeightAt: (x,y) ->
     Math.sin x
+    
+    
+class THREE.terraingen.ImageHeightMapProvider extends THREE.terraingen.HeightMapProvider
+  constructor: (imagePath) ->
+    
+    
+  getHeightAt: (x,y) ->
+    
 	  
 	  
 # Code below from https://gist.github.com/sj26/6145489

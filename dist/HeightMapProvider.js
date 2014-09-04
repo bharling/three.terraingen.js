@@ -37,6 +37,17 @@
 
   })(THREE.terraingen.HeightMapProvider);
 
+  THREE.terraingen.ImageHeightMapProvider = (function(_super) {
+    __extends(ImageHeightMapProvider, _super);
+
+    function ImageHeightMapProvider(imagePath) {}
+
+    ImageHeightMapProvider.prototype.getHeightAt = function(x, y) {};
+
+    return ImageHeightMapProvider;
+
+  })(THREE.terraingen.HeightMapProvider);
+
   floor = Math.floor, sqrt = Math.sqrt;
 
   THREE.terraingen.PerlinHeightMapProvider = (function(_super) {
