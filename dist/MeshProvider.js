@@ -22,11 +22,11 @@
     MeshProvider.prototype.build = function() {
       var geom, material;
       geom = this.geometryProvider.get(0.001);
-      geom.mergeVertices();
       geom.computeFaceNormals();
       geom.computeVertexNormals(true);
       material = new THREE.MeshNormalMaterial({
-        shading: THREE.SmoothShading
+        shading: THREE.SmoothShading,
+        wireframe: true
       });
       return this.mesh = new THREE.Mesh(geom, material);
     };

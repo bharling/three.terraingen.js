@@ -1,7 +1,7 @@
 (function(THREE){
 	var container, camera, scene, renderer;
 	var noisegen = new THREE.terraingen.MersenneTwisterProvider("barrie");
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 4, 0.005);
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 12, 0.005);
 	hmGen.filters = [ new THREE.terraingen.filters.Cliffs(0.3, 0.2), new THREE.terraingen.filters.Cliffs(0.7, 0.1), new THREE.terraingen.filters.HighPass(0.6)]
 	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
 	geomProvider.heightMapProvider = hmGen;
@@ -23,7 +23,9 @@
 	drawHeightMap( hmGen );
 	
 	
-	
+	window.toggleWireframe = function () {
+		mesh.material.wireframe = !mesh.material.wireframe;
+	}
 	
  	function drawHeightMap (mapProvider) {
  		// setup a canvas to hold the heightmap

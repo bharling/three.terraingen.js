@@ -14,10 +14,21 @@
 				top:10px;
 				left:10px;
 			}
+			
+			#controls {
+				position:absolute;
+				right:10px;
+				top:10px;
+				padding:20px;
+				background:rgba(255,255,255,0.7);
+			}
 		</style>
 	</head>
 	
 	<body>
+		<div id="controls">
+			<button onclick="toggleWireframe();">Toggle Wireframe</button>
+		</div>
 		<div id="container"></div>
 		
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.js"></script>
