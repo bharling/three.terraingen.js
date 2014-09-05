@@ -13,22 +13,25 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
   constructor:(@x=0, @y=0, @width=257, @height=257) ->
     
     
-  get:() ->
-    @btt = new BTT_Array(@width, @height, @heightMapProvider)
+  get:(maxVariance=0.05) ->
+    @btt = new THREE.terraingen.BTT(@width, @height, @heightMapProvider, maxVariance)
     @btt.createVertexBuffer()
     @btt.buildTree @width, @height
     @btt.createIndexBuffer()
     return @btt.geom
     
     
+# This code ported from the Director example by Patrick Murris
+# http://patrick.murris.com/articles/btt_3d_terrain.htm
+# Much credit and appreciation to him..
     
-class BTT_Array
+class THREE.terraingen.BTT
   tree: []
-  maxVariance: 0.005
+  maxVariance: 0.02
   squareUnits: 1
   heightScale: 1
   
-  constructor: (@width, @height, @heightMapProvider) ->
+  constructor: (@width, @height, @heightMapProvider, @maxVariance) ->
     @geom = new THREE.Geometry()
    
    
@@ -47,8 +50,16 @@ class BTT_Array
         v1 = @tree[i].v1
         v2 = @tree[i].v2
         v3 = @tree[i].v3
+        @geom.faces.push new THREE.Face3 v3, v2, v1
         
-        @geom.faces.push new THREE.Face3 v1, v2, v3
+  getSeriazlized: () ->
+    result = ""
+    for i in [0 ... @tree.length] by 1
+      if not @tree[i].lc?
+        result += "0"
+      else
+        result += "1"
+    return result
     
   newTri: (v1,v2,v3) ->
     return v1: v1, v2: v2, v3: v3, ln:null, rn:null, bn:null, lc:null, rc:null
@@ -159,171 +170,6 @@ class BTT_Array
         else
           @tree[@tree[f].rn].ln = @tree[f].rc
     return
-    
-  
-    
-    
-class BTT
-  bn:null
-  ln:null
-  rn:null
-  lc:null
-  rc:null
-  depth:0
-  has_children:false
-  
-  
-  constructor: (@parent=null, @depth=0) ->
-    
-  split: () ->
-    if @hasChildren
-      return
-    
-    if @bn?
-      if @bn.bn != @
-        @bn.split()
-        
-      
-      @split2()
-      @bn.split2()
-      
-      @lc.rn = @bn.rc
-      @rc.ln = @bn.lc
-      @bn.lc.rn = @rc
-      @bn.rc.ln = @lc
-    else
-      @split2()
-      @lc.rn = null
-      @rc.ln = null
-     
-    return
-    
-  split2: () ->
-    if @hasChildren
-      return
-    @lc = new BTT(@, @depth+1)
-    @rc = new BTT(@, @depth+1)
-    
-    @hasChildren = true
-    
-    @lc.ln = @rc
-    @rc.rn = @lc
-    
-    @lc.bn = @ln
-    
-    if @ln?
-      if @ln.bn is @
-        @ln.bn = @lc
-      else
-        if @ln.ln is @
-          @ln.ln = @lc
-        else
-          @ln.rn = @lc
-    @rc.bn = @rn
-    if @rn?
-      if @rn.bn is @
-        @rn.bn = @
-      else
-        if @rn.rn is @
-          @rn.rn = @rc
-        else
-          @rn.ln = @rc
-    return
-    
-    
-    
-class THREE.terraingen.ROAMGeometryProvider extends THREE.terraingen.GeometryProvider
-  left_root : new BTT(null,0)
-  right_root : new BTT(null,0)
-  
-  constructor:(@x=0, @y=0, @width=256, @height=256, @max_variance=0.01) ->
-    @left_root.bn = @right_root
-    @right_root.bn = @left_root
-    
-    
-  _getVariance: (apX, apY, lfX, lfY, rtX, rtY) ->
-    heightA = @heightMapProvider.getHeightAt lfX, lfY
-    heightB = @heightMapProvider.getHeightAt rtX, rtY
-    avgHeight = (heightA + heightB) * 0.5
-    cX = (lfX+rtX) >> 1
-    cY = (lfY+rtY) >> 1
-    realHeight = @heightMapProvider.getHeightAt cX, cY
-    
-    return Math.abs realHeight - avgHeight
-  
-  _traverseVarianceIndex: (apX, apY, lfX, lfY, rtX, rtY, depth, maxdepth) ->
-    
-    v = @_getVariance apX, apY, lfX, lfY, rtX, rtY
-    cX = (lfX+rtX)>>1
-    cY = (lfY+rtY)>>1
-    if depth <= maxdepth
-      v = Math.max(v, @_getVariance cX, cY, apX, apY, lfX, lfY)
-      v = Math.max(v, @_getVariance cX, cY, rtX, rtY, apX, apY)
-      
-    ret = if v > @max_variance then "1" else "0"
-    
-    if depth >= maxdepth and ret == "0"
-      return "0"
-      
-    ret += @_traverseVarianceIndex cX, cY, apX, apY, lfX, lfY, depth+1, maxdepth
-    ret += @_traverseVarianceIndex cX, cY, rtX, rtY, apX, apY, depth+1, maxdepth
-    
-    ret
-    
-  _buildVarianceIndex: (lod=16) ->
-    leftIndex = @_traverseVarianceIndex 0, 0, 0, @height, @width, 0, 0, lod
-    rightIndex = @_traverseVarianceIndex @width, @height, @width, 0, 0, @height, 0, lod
-    rightIndex + leftIndex
-    
-  createTree: (node, apX, apY, lfX, lfY, rtX, rtY, depth, maxdepth) ->
-    v = @_getVariance apX, apY, lfX, lfY, rtX, rtY
-    cX = (lfX+rtX)>>1
-    cY = (lfY+rtY)>>1
-    if depth <= maxdepth
-      v = Math.max(v, @_getVariance cX, cY, apX, apY, lfX, lfY)
-      v = Math.max(v, @_getVariance cX, cY, rtX, rtY, apX, apY)
-    split = v > @max_variance
-    if split and depth <= maxdepth
-      node.split()
-    else
-      return
-    if node.hasChildren  
-      @createTree node.lc, cX, cY, apX, apY, lfX, lfY, depth+1, maxdepth
-      @createTree node.rc, cX, cY, rtX, rtY, apX, apY, depth+1, maxdepth
-    return
-    
-  createGeom: (node, apX, apY, lfX, lfY, rtX, rtY) ->
-    if node.hasChildren
-      cX = (lfX+rtX)>>1
-      cY = (lfY+rtY)>>1
-      @createGeom node.lc, cX, cY, apX, apY, lfX, lfY
-      @createGeom node.rc, cX, cY, rtX, rtY, apX, apY
-    else
-      ind = @geometry.vertices.length - 1
-      apHeight = @heightMapProvider.getHeightAt apX, apY
-      lfHeight = @heightMapProvider.getHeightAt lfX, lfY
-      rtHeight = @heightMapProvider.getHeightAt rtX, rtY
-      
-      @geometry.vertices.push new THREE.Vector3 apX, apHeight, apY
-      @geometry.vertices.push new THREE.Vector3 lfX, lfHeight, lfY
-      @geometry.vertices.push new THREE.Vector3 rtX, rtHeight, rtY
-      
-      @geometry.faces.push new THREE.Face3 ind+1, ind+2, ind+3
-     
-  _buildSplits: (lod=12) ->
-    @createTree @left_root, 0, 0, 0, @height, @width, 0, 0, lod
-    @createTree @right_root, @width, @height, @width, 0, 0, @height, 0, lod
-    
-  _buildGeometry: () ->
-    @geometry = new THREE.Geometry()
-    @createGeom @left_root, 0, 0, 0, @height, @width, 0
-    @createGeom @right_root, @width, @height, @width, 0, 0, @height, 0
-    
-  get: () ->
-    console.log @_buildVarianceIndex()
-    @_buildSplits()
-    @_buildGeometry()
-    @geometry
     
     
 class THREE.terraingen.GridGeometryProvider extends THREE.terraingen.GeometryProvider

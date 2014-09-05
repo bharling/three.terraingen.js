@@ -12,8 +12,12 @@ class THREE.terraingen.MeshProvider
   
   
   build: () ->
-    geom = @geometryProvider.get()
-    material = new THREE.MeshBasicMaterial wireframe:true
+    geom = @geometryProvider.get(0.001)
+    geom.mergeVertices()
+    geom.computeFaceNormals()
+    geom.computeVertexNormals(true)
+    #material = new THREE.MeshBasicMaterial wireframe:true
+    material = new THREE.MeshNormalMaterial({shading:THREE.SmoothShading})
     @mesh = new THREE.Mesh(geom, material)
     
   get: () ->

@@ -1,8 +1,8 @@
 (function(THREE){
 	var container, camera, scene, renderer;
-	var noisegen = new THREE.terraingen.MersenneTwisterProvider(5656);
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 6, 0.004);
-	hmGen.filters = [new THREE.terraingen.filters.LowPass(0.5)]
+	var noisegen = new THREE.terraingen.MersenneTwisterProvider("barrie");
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 4, 0.005);
+	hmGen.filters = [ new THREE.terraingen.filters.Cliffs(0.3, 0.2), new THREE.terraingen.filters.Cliffs(0.7, 0.1), new THREE.terraingen.filters.HighPass(0.6)]
 	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
 	geomProvider.heightMapProvider = hmGen;
 	var meshProvider = new THREE.terraingen.MeshProvider();
@@ -20,7 +20,7 @@
 	scene.add(mesh);
 	
 	mesh.rotation.x = 4
-	//drawHeightMap( hmGen );
+	drawHeightMap( hmGen );
 	
 	
 	
@@ -28,7 +28,7 @@
  	function drawHeightMap (mapProvider) {
  		// setup a canvas to hold the heightmap
  		var canvas = document.createElement('canvas');
- 		canvas.id = "hm-canvas";
+ 		canvas.id = "heightMap";
  		canvas.height = 256;
  		canvas.width = 256;
  		document.body.appendChild(canvas);
@@ -42,7 +42,7 @@
  			for (var y = 0; y < 256; y++) {
  				var hgt = 0.0; 
  				hgt += hmGen.getHeightAt(x,y);
- 				var pix = Math.floor( (hgt) * 256 );
+ 				var pix = Math.floor( (1.0-hgt) * 256 );
  				d[0] = d[1] = d[2] = pix;
  				d[3] = 255;
  				ctx.putImageData(id, x, y);
@@ -55,7 +55,7 @@
  		container = document.getElementById('container');
  		
  		camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
- 		camera.position.z = 3000;
+ 		camera.position.z = 2000;
  		camera.position.y = 300;
  		camera.position.x = 500;
  		
@@ -83,6 +83,7 @@
 
 
 		//mesh.rotation.y = time * 0.2;
+ 		
 		
 
 		renderer.render( scene, camera );

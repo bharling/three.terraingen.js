@@ -55,4 +55,26 @@
 
   })(THREE.terraingen.filters.Filter);
 
+  THREE.terraingen.filters.Cliffs = (function(_super) {
+    __extends(Cliffs, _super);
+
+    function Cliffs(plainLevel, range) {
+      this.plainLevel = plainLevel != null ? plainLevel : 0.5;
+      this.range = range != null ? range : 0.2;
+      this.apply = __bind(this.apply, this);
+      this.lowerBound = this.plainLevel - (this.range / 2);
+      this.upperBound = this.plainLevel + (this.range / 2);
+    }
+
+    Cliffs.prototype.apply = function(val) {
+      if ((this.lowerBound < val && val < this.upperBound)) {
+        return this.plainLevel;
+      }
+      return val;
+    };
+
+    return Cliffs;
+
+  })(THREE.terraingen.filters.Filter);
+
 }).call(this);

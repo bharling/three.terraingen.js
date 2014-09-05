@@ -23,3 +23,13 @@ class THREE.terraingen.filters.HighPass extends THREE.terraingen.filters.Filter
   apply:(val) =>
     Math.min val, @cutoff
     
+class THREE.terraingen.filters.Cliffs extends THREE.terraingen.filters.Filter
+  constructor: (@plainLevel=0.5, @range=0.2) ->
+    @lowerBound = @plainLevel - (@range / 2)
+    @upperBound = @plainLevel + (@range / 2)
+    
+  apply:(val) =>
+    if @lowerBound < val < @upperBound
+      return @plainLevel
+    return val
+    
