@@ -1,7 +1,7 @@
 (function(THREE){
 	var container, camera, scene, renderer;
 	var noisegen = new THREE.terraingen.MersenneTwisterProvider(5656);
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 3, 0.004);
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 6, 0.004);
 	hmGen.filters = [new THREE.terraingen.filters.LowPass(0.5)]
 	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
 	geomProvider.heightMapProvider = hmGen;

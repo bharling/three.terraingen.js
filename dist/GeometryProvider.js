@@ -38,7 +38,6 @@
       this.btt.createVertexBuffer();
       this.btt.buildTree(this.width, this.height);
       this.btt.createIndexBuffer();
-      console.log(this.btt.geom);
       return this.btt.geom;
     };
 
@@ -49,7 +48,7 @@
   BTT_Array = (function() {
     BTT_Array.prototype.tree = [];
 
-    BTT_Array.prototype.maxVariance = 0.001;
+    BTT_Array.prototype.maxVariance = 0.005;
 
     BTT_Array.prototype.squareUnits = 1;
 

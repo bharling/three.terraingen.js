@@ -18,15 +18,13 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
     @btt.createVertexBuffer()
     @btt.buildTree @width, @height
     @btt.createIndexBuffer()
-    
-    console.log @btt.geom
     return @btt.geom
     
     
     
 class BTT_Array
   tree: []
-  maxVariance: 0.001
+  maxVariance: 0.005
   squareUnits: 1
   heightScale: 1
   

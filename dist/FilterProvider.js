@@ -32,7 +32,7 @@
     }
 
     LowPass.prototype.apply = function(val) {
-      return Math.min(val, this.cutoff);
+      return Math.max(val, this.cutoff);
     };
 
     return LowPass;
@@ -48,7 +48,7 @@
     }
 
     HighPass.prototype.apply = function(val) {
-      return Math.max(val, this.cutoff);
+      return Math.min(val, this.cutoff);
     };
 
     return HighPass;
