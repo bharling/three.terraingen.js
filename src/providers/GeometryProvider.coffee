@@ -9,6 +9,162 @@ class THREE.terraingen.GeometryProvider
     
     
     
+class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProvider
+  constructor:(@x=0, @y=0, @width=257, @height=257) ->
+    
+    
+  get:() ->
+    @btt = new BTT_Array(@width, @height, @heightMapProvider)
+    @btt.createVertexBuffer()
+    @btt.buildTree @width, @height
+    @btt.createIndexBuffer()
+    
+    console.log @btt.geom
+    return @btt.geom
+    
+    
+    
+class BTT_Array
+  tree: []
+  maxVariance: 0.001
+  squareUnits: 1
+  heightScale: 1
+  
+  constructor: (@width, @height, @heightMapProvider) ->
+    @geom = new THREE.Geometry()
+   
+   
+  createVertexBuffer: () ->
+    nv = 0
+    for i in [0 ... @width] by 1
+      for j in [0 ... @height] by 1
+        alt = (@heightMapProvider.getHeightAt i, j) * @heightScale
+        @geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
+        nv++
+    console.log @geom.vertices.length
+        
+  createIndexBuffer: () ->
+    for i in [0 ... @tree.length] by 1
+      if not @tree[i].lc?
+        v1 = @tree[i].v1
+        v2 = @tree[i].v2
+        v3 = @tree[i].v3
+        
+        @geom.faces.push new THREE.Face3 v1, v2, v3
+    
+  newTri: (v1,v2,v3) ->
+    return v1: v1, v2: v2, v3: v3, ln:null, rn:null, bn:null, lc:null, rc:null
+    
+    
+  getVariance: (v1, v2, v3) ->
+    if Math.abs( @geom.vertices[v3].x - @geom.vertices[v1].x ) > @squareUnits or Math.abs(@geom.vertices[v3].z - @geom.vertices[v1].z) > @squareUnits
+      hi = Math.round(((@geom.vertices[v3].x / @squareUnits) - (@geom.vertices[v1].x / @squareUnits)) / 2 + (@geom.vertices[v1].x / @squareUnits))
+      hj = Math.round(((@geom.vertices[v3].z / @squareUnits) - (@geom.vertices[v1].z / @squareUnits)) / 2 + (@geom.vertices[v1].z / @squareUnits))
+      
+      
+      
+      vh = Math.round((hi)*(@width) + hj)
+      
+      alt = @heightMapProvider.getHeightAt hi, hj
+      v = Math.abs(alt - ((@geom.vertices[v1].y + @geom.vertices[v3].y) / 2))
+      v = Math.max(v, @getVariance(v2, vh, v1))
+      v = Math.max(v, @getVariance(v3, vh, v2))
+    else
+      v = 0
+    return v
+    
+  buildTree: (width, height) ->
+    @tree.push @newTri 0, width-1, width+(width*(height-1)) - 1
+    @tree.push @newTri width-1+(width*(height-1)), (width*(height-1)), 0
+    @tree[0].bn = 1
+    @tree[1].bn = 0
+    @buildFace 0
+    @buildFace 1
+    return
+    
+  buildFace: (f) ->
+    
+    
+    if @tree[f].lc?
+      @buildFace @tree[f].lc
+      @buildFace @tree[f].rc
+    else
+      v1 = @tree[f].v1
+      v2 = @tree[f].v2
+      v3 = @tree[f].v3
+      
+      
+      if @getVariance(v1,v2,v3) > @maxVariance
+        
+        @splitFace f
+        @buildFace @tree[f].lc
+        @buildFace @tree[f].rc
+    return
+  
+  splitFace: (f) ->
+    
+    
+    if @tree[f].bn?
+      if @tree[@tree[f].bn].bn isnt f
+        @splitFace @tree[f].bn
+      @splitFace2 f
+      @splitFace2 @tree[f].bn
+      
+      @tree[@tree[f].lc].rn = @tree[@tree[f].bn].rc
+      @tree[@tree[f].rc].ln = @tree[@tree[f].bn].lc
+      @tree[@tree[@tree[f].bn].lc].rn = @tree[f].rc
+      @tree[@tree[@tree[f].bn].rc].ln = @tree[f].lc
+    else
+      @splitFace2 f
+    return
+  
+  getApexIndex: (v1, v2, v3) ->
+  
+  
+  splitFace2: (f) ->
+    
+    
+    v1 = @tree[f].v1
+    v2 = @tree[f].v2
+    v3 = @tree[f].v3
+    
+    
+    hi = ((@geom.vertices[v3].x / @squareUnits) - (@geom.vertices[v1].x / @squareUnits)) / 2 + (@geom.vertices[v1].x / @squareUnits)
+    hj = ((@geom.vertices[v3].z / @squareUnits) - (@geom.vertices[v1].z / @squareUnits)) / 2 + (@geom.vertices[v1].z / @squareUnits)
+    vh = Math.round((hi)*(@width) + hj)
+    @tree.push @newTri v2, vh, v1
+    @tree[f].lc = @tree.length-1
+    @tree.push @newTri v3, vh, v2
+    @tree[f].rc = @tree.length-1
+    
+    @tree[@tree[f].lc].ln = @tree[f].rc
+    @tree[@tree[f].rc].rn = @tree[f].lc
+    @tree[@tree[f].lc].bn = @tree[f].ln
+    
+    if @tree[f].ln?
+      if @tree[@tree[f].ln].bn is f
+        @tree[@tree[f].ln].bn = @tree[f].lc
+      else
+        if @tree[@tree[f].ln].ln is f
+          @tree[@tree[f].ln].ln = @tree[f].lc
+        else
+          @tree[@tree[f].ln].rn = @tree[f].lc
+    
+    @tree[@tree[f].rc].bn = @tree[f].rn
+    
+    if @tree[f].rn?
+      if @tree[@tree[f].rn].bn is f
+        @tree[@tree[f].rn].bn = @tree[f].rc
+      else
+        if @tree[@tree[f].rn].rn is f
+          @tree[@tree[f].rn].rn = @tree[f].rc  
+        else
+          @tree[@tree[f].rn].ln = @tree[f].rc
+    return
+    
+  
+    
+    
 class BTT
   bn:null
   ln:null
@@ -19,7 +175,7 @@ class BTT
   has_children:false
   
   
-  constructor: (@parent=null) ->
+  constructor: (@parent=null, @depth=0) ->
     
   split: () ->
     if @hasChildren
@@ -29,8 +185,9 @@ class BTT
       if @bn.bn != @
         @bn.split()
         
-      @bn.split2()
+      
       @split2()
+      @bn.split2()
       
       @lc.rn = @bn.rc
       @rc.ln = @bn.lc
@@ -46,8 +203,8 @@ class BTT
   split2: () ->
     if @hasChildren
       return
-    @lc = new BTT(@)
-    @rc = new BTT(@)
+    @lc = new BTT(@, @depth+1)
+    @rc = new BTT(@, @depth+1)
     
     @hasChildren = true
     
@@ -78,8 +235,8 @@ class BTT
     
     
 class THREE.terraingen.ROAMGeometryProvider extends THREE.terraingen.GeometryProvider
-  left_root : new BTT()
-  right_root : new BTT()
+  left_root : new BTT(null,0)
+  right_root : new BTT(null,0)
   
   constructor:(@x=0, @y=0, @width=256, @height=256, @max_variance=0.01) ->
     @left_root.bn = @right_root
