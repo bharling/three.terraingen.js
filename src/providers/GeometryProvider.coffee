@@ -30,16 +30,29 @@ class THREE.terraingen.BTT
   maxVariance: 0.02
   squareUnits: 1
   heightScale: 1
+  heightCache : []
+  
+  cacheHeightMap: (width, height) ->
+    for i in [0 ... width] by 1
+      for j in [0 ... height] by 1
+        @heightCache.push( @heightMapProvider.getHeightAt(j, i))
+        
+  getCachedHeight: (x, y) ->
+    return @heightCache[x + (@width*y)]
+    
+  
   
   constructor: (@width, @height, @heightMapProvider, @maxVariance) ->
     @geom = new THREE.Geometry()
+    @cacheHeightMap @width, @height
    
    
   createVertexBuffer: () ->
     nv = 0
     for i in [0 ... @width] by 1
       for j in [0 ... @height] by 1
-        alt = (@heightMapProvider.getHeightAt i, j) * @heightScale
+        #alt = (@heightMapProvider.getHeightAt i, j) * @heightScale
+        alt = (@getCachedHeight i, j) * @heightScale
         @geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
         nv++
     console.log @geom.vertices.length
@@ -74,7 +87,8 @@ class THREE.terraingen.BTT
       
       vh = Math.round((hi)*(@width) + hj)
       
-      alt = @heightMapProvider.getHeightAt hi, hj
+      #alt = @heightMapProvider.getHeightAt hi, hj
+      alt = @getCachedHeight hi, hj
       v = Math.abs(alt - ((@geom.vertices[v1].y + @geom.vertices[v3].y) / 2))
       v = Math.max(v, @getVariance(v2, vh, v1))
       v = Math.max(v, @getVariance(v3, vh, v2))

@@ -56,12 +56,35 @@
 
     BTT.prototype.heightScale = 1;
 
+    BTT.prototype.heightCache = [];
+
+    BTT.prototype.cacheHeightMap = function(width, height) {
+      var i, j, _i, _results;
+      _results = [];
+      for (i = _i = 0; _i < width; i = _i += 1) {
+        _results.push((function() {
+          var _j, _results1;
+          _results1 = [];
+          for (j = _j = 0; _j < height; j = _j += 1) {
+            _results1.push(this.heightCache.push(this.heightMapProvider.getHeightAt(j, i)));
+          }
+          return _results1;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    BTT.prototype.getCachedHeight = function(x, y) {
+      return this.heightCache[x + (this.width * y)];
+    };
+
     function BTT(width, height, heightMapProvider, maxVariance) {
       this.width = width;
       this.height = height;
       this.heightMapProvider = heightMapProvider;
       this.maxVariance = maxVariance;
       this.geom = new THREE.Geometry();
+      this.cacheHeightMap(this.width, this.height);
     }
 
     BTT.prototype.createVertexBuffer = function() {
@@ -69,7 +92,7 @@
       nv = 0;
       for (i = _i = 0, _ref = this.width; _i < _ref; i = _i += 1) {
         for (j = _j = 0, _ref1 = this.height; _j < _ref1; j = _j += 1) {
-          alt = (this.heightMapProvider.getHeightAt(i, j)) * this.heightScale;
+          alt = (this.getCachedHeight(i, j)) * this.heightScale;
           this.geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits));
           nv++;
         }
@@ -125,7 +148,7 @@
         hi = Math.round(((this.geom.vertices[v3].x / this.squareUnits) - (this.geom.vertices[v1].x / this.squareUnits)) / 2 + (this.geom.vertices[v1].x / this.squareUnits));
         hj = Math.round(((this.geom.vertices[v3].z / this.squareUnits) - (this.geom.vertices[v1].z / this.squareUnits)) / 2 + (this.geom.vertices[v1].z / this.squareUnits));
         vh = Math.round(hi * this.width + hj);
-        alt = this.heightMapProvider.getHeightAt(hi, hj);
+        alt = this.getCachedHeight(hi, hj);
         v = Math.abs(alt - ((this.geom.vertices[v1].y + this.geom.vertices[v3].y) / 2));
         v = Math.max(v, this.getVariance(v2, vh, v1));
         v = Math.max(v, this.getVariance(v3, vh, v2));

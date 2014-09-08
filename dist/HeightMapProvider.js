@@ -8,6 +8,8 @@
 
     HeightMapProvider.prototype.filters = [];
 
+    HeightMapProvider.prototype.features = [];
+
     return HeightMapProvider;
 
   })();
@@ -52,6 +54,8 @@
 
   THREE.terraingen.PerlinHeightMapProvider = (function(_super) {
     __extends(PerlinHeightMapProvider, _super);
+
+    PerlinHeightMapProvider.prototype.cache = {};
 
     PerlinHeightMapProvider.prototype.grad3 = [[1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0], [1, 0, 1], [-1, 0, 1], [1, 0, -1], [-1, 0, -1], [0, 1, 1], [0, -1, 1], [0, 1, -1], [0, -1, -1]];
 

@@ -1,8 +1,17 @@
 (function(THREE){
 	var container, camera, scene, renderer;
 	var noisegen = new THREE.terraingen.MersenneTwisterProvider("barrie");
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 12, 0.005);
-	hmGen.filters = [ new THREE.terraingen.filters.Cliffs(0.3, 0.2), new THREE.terraingen.filters.Cliffs(0.7, 0.1), new THREE.terraingen.filters.HighPass(0.6)]
+	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 10, 0.004);
+	
+	console.log(hmGen.getHeightAt(20,68))
+	
+	//var road = new THREE.terraingen.features.Road([0,10], [20,120], 2)
+	
+	//hmGen.features = [new THREE.terraingen.features.Roads([road])]
+	
+	
+	
+	hmGen.filters = [ new THREE.terraingen.filters.Cliffs(0.3, 0.2), new THREE.terraingen.filters.Cliffs(0.7, 0.1)]
 	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
 	geomProvider.heightMapProvider = hmGen;
 	var meshProvider = new THREE.terraingen.MeshProvider();
@@ -10,6 +19,8 @@
 	
 	
 	bootstrap();
+	
+	meshProvider.lod = 0.0006
 	
 	var mesh = meshProvider.get();
 	
@@ -20,7 +31,7 @@
 	scene.add(mesh);
 	
 	mesh.rotation.x = 4
-	drawHeightMap( hmGen );
+	//drawHeightMap( hmGen );
 	
 	
 	window.toggleWireframe = function () {

@@ -8,11 +8,13 @@ class THREE.terraingen.MeshProvider
   materialProvider : null
   mesh : null
   
+  lod: 0.0001
+  
   constructor: (@x=0, @y=0, @width=256, @height=256) ->
   
   
   build: () ->
-    geom = @geometryProvider.get(0.001)
+    geom = @geometryProvider.get(@lod)
     geom.computeFaceNormals()
     geom.computeVertexNormals(true)
     #material = new THREE.MeshBasicMaterial wireframe:true

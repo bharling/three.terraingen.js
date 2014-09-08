@@ -12,6 +12,8 @@
 
     MeshProvider.prototype.mesh = null;
 
+    MeshProvider.prototype.lod = 0.0001;
+
     function MeshProvider(x, y, width, height) {
       this.x = x != null ? x : 0;
       this.y = y != null ? y : 0;
@@ -21,7 +23,7 @@
 
     MeshProvider.prototype.build = function() {
       var geom, material;
-      geom = this.geometryProvider.get(0.001);
+      geom = this.geometryProvider.get(this.lod);
       geom.computeFaceNormals();
       geom.computeVertexNormals(true);
       material = new THREE.MeshNormalMaterial({

@@ -1,5 +1,6 @@
 class THREE.terraingen.HeightMapProvider
   filters : []
+  features : []
   
   
 	constructor : (@RNGFunction=Math.random) ->
@@ -29,6 +30,9 @@ class THREE.terraingen.ImageHeightMapProvider extends THREE.terraingen.HeightMap
 {floor, sqrt} = Math
 
 class THREE.terraingen.PerlinHeightMapProvider extends THREE.terraingen.HeightMapProvider
+  cache: {}
+  
+  
   grad3: [
     [1,1, 0], [-1,1, 0], [1,-1,0], [-1,-1,0], [1,0, 1], [-1, 0, 1]
     [1,0,-1], [-1,0,-1], [0, 1,1], [ 0,-1,1], [0,1,-1], [ 0,-1,-1]
@@ -60,6 +64,10 @@ class THREE.terraingen.PerlinHeightMapProvider extends THREE.terraingen.HeightMa
     g[0] * x + g[1] * y
     
   getHeightAt: (x, y) ->
+    #key = ""+x+""+y
+    #if @cache[key]?
+      #return @cache[key]
+    
     hgt = 0.0
     amplitude = 1.0
     x*=@scale
@@ -73,6 +81,7 @@ class THREE.terraingen.PerlinHeightMapProvider extends THREE.terraingen.HeightMa
     hgt = (hgt+1.0) * 0.5
     for filter in @filters
       hgt = filter.apply hgt
+    #@cache[key] = hgt
     hgt
       
  
