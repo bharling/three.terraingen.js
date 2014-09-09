@@ -1,8 +1,29 @@
-var container, camera, scene, renderer, output, mesh;
+var container, camera, scene, renderer, output, mesh, tile, controls;
 
 (function(THREE){
+	RNG = THREE.terraingen.MersenneTwisterProvider;
 	
+	Perlin = THREE.terraingen.generators.Perlin, Max = THREE.terraingen.modifiers.Max, Constant = THREE.terraingen.modifiers.Constant;
 	
+	Min = THREE.terraingen.modifiers.Min;
+	
+	var Abs = THREE.terraingen.modifiers.Abs, Convert = THREE.terraingen.modifiers.ConvertToUnsigned;
+	
+	var source = new Convert(
+		new Max(
+			new Abs(
+				new Perlin(
+					new RNG(48327432).random, 12, 0.004
+				) 
+			)
+			,new Constant(0.2)
+		)
+
+    );
+	
+	output = new THREE.terraingen.modifiers.Cache( source );
+	
+	/*
 	// start with a random number generator
 	var rng1 = new THREE.terraingen.MersenneTwisterProvider(23432432);
 	
@@ -16,7 +37,7 @@ var container, camera, scene, renderer, output, mesh;
 	var noiseSource2 = new THREE.terraingen.generators.Perlin(rng2.random, 6, 0.002);
 	
 	// Modify the value with Math.abs() - gives a sand-dune like effect
-	var abssource = new THREE.terraingen.modifiers.Pow( noiseSource2, new THREE.terraingen.modifiers.Constant(2) )
+	var abssource = new THREE.terraingen.modifiers.Pow( noiseSource2, new THREE.terraingen.modifiers.Constant(2) );
 	
 	// lets have a constant
 	var myConst = new THREE.terraingen.modifiers.Constant( 0.2 );
@@ -44,7 +65,7 @@ var container, camera, scene, renderer, output, mesh;
 	
 	
 	
-	
+	*/
 	
 	
 	// plug that into a geometry provider
@@ -70,22 +91,21 @@ var container, camera, scene, renderer, output, mesh;
 	//mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
 	//mesh.scale.y = 300;
 	
-	var patch = new THREE.terraingen.TerrainPatch( 512, 512, 257, 257, meshProvider );
 	
-	patch.addLOD(0.05, 1500);
-	patch.addLOD(0.01, 1000);
-	patch.addLOD(0.005, 750);
-	patch.addLOD(0.001, 500);
-	patch.addLOD(0.0003, 200);
+	tile = new THREE.terraingen.Tile(x,y,meshProvider);
 	
-	mesh = patch.get()
+	mesh = tile.get()
 	
 	mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
 	mesh.scale.y = 300;
 	
+	
+	mesh.position.x -= (256*2)
+	
+	
 	scene.add(mesh);
 	
-	mesh.rotation.x = 4
+	//mesh.rotation.x = 4
 	//drawHeightMap( hmGen, x, y );
 	
 	
@@ -123,9 +143,7 @@ var container, camera, scene, renderer, output, mesh;
  		container = document.getElementById('container');
  		
  		camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
- 		camera.position.z = 2000;
- 		camera.position.y = 300;
- 		camera.position.x = 500;
+ 		camera.position.z = 500;
  		
  		scene = new THREE.Scene();
  		
@@ -137,11 +155,16 @@ var container, camera, scene, renderer, output, mesh;
  		
  		container.appendChild(renderer.domElement);
  		
+ 		controls = new THREE.OrbitControls(camera);
+ 		//controls.addEventListener('change', render);
+ 		
  	}
  	
  	
  	function animate () {
  		requestAnimationFrame(animate);
+ 		controls.update();
+ 		tile.update(camera);
  		render();
  	}
 	
@@ -149,11 +172,10 @@ var container, camera, scene, renderer, output, mesh;
  	function render () {
  		var time = Date.now() * 0.001;
 
-
+		
 		//mesh.rotation.y = time * 0.2;
  		
-		camera.position.multiplyScalar(0.999);
-		mesh.update(camera);
+		
 		renderer.render( scene, camera );
  	}
 	

@@ -61,7 +61,6 @@ class THREE.terraingen.BTT
       for j in [0 ... @height] by 1
         alt = (@heightMapProvider.get @x+i, @y+j) * @heightScale
         geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
-    console.log geom.vertices.length
         
   createIndexBuffer: (geom) ->
     for i in [0 ... @tree.length] by 1
@@ -69,7 +68,7 @@ class THREE.terraingen.BTT
         v1 = @tree[i].v1
         v2 = @tree[i].v2
         v3 = @tree[i].v3
-        geom.faces.push new THREE.Face3 v3, v2, v1
+        geom.faces.push new THREE.Face3 v1, v2, v3
         
   getSeriazlized: () ->
     result = ""
@@ -86,8 +85,6 @@ class THREE.terraingen.BTT
     
   getVariance: (v1, v2, v3, geom) ->
     
-    if typeof geom == 'undefined'
-      console.log v1,v2,v3
     
     if Math.abs( geom.vertices[v3].x - geom.vertices[v1].x ) > @squareUnits or Math.abs(geom.vertices[v3].z - geom.vertices[v1].z) > @squareUnits
       hi = Math.round(((geom.vertices[v3].x / @squareUnits) - (geom.vertices[v1].x / @squareUnits)) / 2 + (geom.vertices[v1].x / @squareUnits))
@@ -113,7 +110,6 @@ class THREE.terraingen.BTT
     @tree[0].bn = 1
     @tree[1].bn = 0
     @buildFace 0, geom
-    console.log geom
     @buildFace 1, geom
     return
     

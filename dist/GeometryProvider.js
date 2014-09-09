@@ -86,14 +86,20 @@
     };
 
     BTT.prototype.createVertexBuffer = function(geom) {
-      var alt, i, j, _i, _j, _ref, _ref1;
+      var alt, i, j, _i, _ref, _results;
+      _results = [];
       for (i = _i = 0, _ref = this.width; _i < _ref; i = _i += 1) {
-        for (j = _j = 0, _ref1 = this.height; _j < _ref1; j = _j += 1) {
-          alt = (this.heightMapProvider.get(this.x + i, this.y + j)) * this.heightScale;
-          geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits));
-        }
+        _results.push((function() {
+          var _j, _ref1, _results1;
+          _results1 = [];
+          for (j = _j = 0, _ref1 = this.height; _j < _ref1; j = _j += 1) {
+            alt = (this.heightMapProvider.get(this.x + i, this.y + j)) * this.heightScale;
+            _results1.push(geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits)));
+          }
+          return _results1;
+        }).call(this));
       }
-      return console.log(geom.vertices.length);
+      return _results;
     };
 
     BTT.prototype.createIndexBuffer = function(geom) {
@@ -104,7 +110,7 @@
           v1 = this.tree[i].v1;
           v2 = this.tree[i].v2;
           v3 = this.tree[i].v3;
-          _results.push(geom.faces.push(new THREE.Face3(v3, v2, v1)));
+          _results.push(geom.faces.push(new THREE.Face3(v1, v2, v3)));
         } else {
           _results.push(void 0);
         }
@@ -140,9 +146,6 @@
 
     BTT.prototype.getVariance = function(v1, v2, v3, geom) {
       var alt, hi, hj, v, vh;
-      if (typeof geom === 'undefined') {
-        console.log(v1, v2, v3);
-      }
       if (Math.abs(geom.vertices[v3].x - geom.vertices[v1].x) > this.squareUnits || Math.abs(geom.vertices[v3].z - geom.vertices[v1].z) > this.squareUnits) {
         hi = Math.round(((geom.vertices[v3].x / this.squareUnits) - (geom.vertices[v1].x / this.squareUnits)) / 2 + (geom.vertices[v1].x / this.squareUnits));
         hj = Math.round(((geom.vertices[v3].z / this.squareUnits) - (geom.vertices[v1].z / this.squareUnits)) / 2 + (geom.vertices[v1].z / this.squareUnits));
@@ -163,7 +166,6 @@
       this.tree[0].bn = 1;
       this.tree[1].bn = 0;
       this.buildFace(0, geom);
-      console.log(geom);
       this.buildFace(1, geom);
     };
 

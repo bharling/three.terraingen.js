@@ -1,17 +1,66 @@
-class THREE.terraingen.TerrainPatch
+class THREE.terraingen.Patch
   parent:null
-  object: new THREE.LOD()
   
-  constructor : (@x=0, @y=0, @width=257, @height=257, @meshProvider, @parent=null) ->
+  
+  constructor : (@x=0, @y=0, @width=33, @height=33, @meshProvider, @parent=null) ->
+    @object = new THREE.LOD()
     @meshProvider.setRegion @x, @y, @width, @height
+    @object.position.x = @x
+    @object.position.z = @y
     
   addLOD : (level, distance) ->
     @meshProvider.lod = level
+    @meshProvider.setRegion @x, @y, @width, @height
     obj = @meshProvider.get()
     @object.addLevel(obj, distance)
     
   get: () ->
     return @object
+    
+    
+class THREE.terraingen.Tile
+  
+  lods: [
+    {
+      level:0.005, distance:500
+    },
+    {
+      level:0.02, distance: 1500
+    },
+    {
+      level:0.08, distance: 2500
+    }
+  ]
+  constructor: (@x=0, @y=0, @meshProvider) ->
+    @queue = []
+    @patches = []
+    @object = new THREE.Object3D()
+    # create blank patches
+    for i in [0 ... 16] by 1
+      for j in [0 ... 16] by 1
+        patch = new THREE.terraingen.Patch( i*32, j*32, 33, 33, @meshProvider )
+        @queue.push patch
+  
+  update: (camera) ->
+    if !@ready
+      if @queue.length
+        next = @queue.pop()
+        for lod in @lods
+          next.addLOD lod.level, lod.distance
+        @patches.push next
+        @object.add next.get()
+      else
+        @ready = true
+    for p in @patches
+      p.object.update(camera)
+  get: () ->
+    return @object
+      
+      
+      
+        
+    
+  
     
     
 class QuadTreeNode
