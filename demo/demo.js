@@ -38,12 +38,12 @@ var container, camera, scene, renderer, output;
 	
 	// choose some origin in noise space
 	var x = 600;
-	var y = 80;
+	var y = 776576;
 	
 	// plug in a mesh provider
 	var meshProvider = new THREE.terraingen.MeshProvider(x, y);
 	meshProvider.geometryProvider = geomProvider;	
-	meshProvider.lod = 0.001
+	meshProvider.lod = 0.01
 	
 	
 	bootstrap();

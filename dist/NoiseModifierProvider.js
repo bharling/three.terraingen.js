@@ -210,7 +210,7 @@
       if (z == null) {
         z = 0.0;
       }
-      key = x.toString() + "_" + y.toString() + "_" + z.toString();
+      key = '' + x + '_' + y + '_' + z;
       if (this.cache[key] == null) {
         this.cache[key] = this.source.get(x, y, z);
       }

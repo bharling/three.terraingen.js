@@ -82,7 +82,7 @@ class THREE.terraingen.modifiers.Cache extends THREE.terraingen.modifiers.Modifi
   constructor: (@source) ->
     
   get : (x, y, z=0.0) ->
-    key = x.toString() + "_" + y.toString() + "_" + z.toString()
+    key = '' + x + '_' + y + '_' + z
     if !@cache[key]?
       @cache[key] = @source.get(x, y, z)
     return @cache[key]
