@@ -1,4 +1,11 @@
-class THREE.terraingen.HeightMapProvider
+THREE = window.THREE or {}
+
+THREE.terraingen = THREE.terraingen || {}
+
+THREE.terraingen.generators = THREE.terraingen.generators || {}
+
+
+class THREE.terraingen.generators.Generator
   filters : []
   features : []
   
@@ -12,12 +19,14 @@ class THREE.terraingen.HeightMapProvider
 	  
 	  
 	  
-class THREE.terraingen.SineWaveHeightMapProvider extends THREE.terraingen.HeightMapProvider
+class THREE.terraingen.generators.SineX extends THREE.terraingen.generators.Generator
+  constructor: (@scaleSource) ->
+  
   get: (x, y, z=0.0) ->
-    Math.sin x
+    Math.sin x * @scaleSource.get x, y, z
     
     
-class THREE.terraingen.ImageHeightMapProvider extends THREE.terraingen.HeightMapProvider
+class THREE.terraingen.generators.ImageMap extends THREE.terraingen.generators.Generator
   constructor: (imagePath) ->
     
     
@@ -29,7 +38,7 @@ class THREE.terraingen.ImageHeightMapProvider extends THREE.terraingen.HeightMap
 
 {floor, sqrt} = Math
 
-class THREE.terraingen.PerlinHeightMapProvider extends THREE.terraingen.HeightMapProvider
+class THREE.terraingen.generators.Perlin extends THREE.terraingen.generators.Generator
   cache: {}
   
   

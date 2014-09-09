@@ -14,7 +14,7 @@ class THREE.terraingen.modifiers.Modifier
     return 1.0
 
 
-{max, min, abs} = Math
+{max, min, abs, pow} = Math
 
 
 class THREE.terraingen.modifiers.Constant extends THREE.terraingen.modifiers.Modifier
@@ -72,6 +72,25 @@ class THREE.terraingen.modifiers.Min extends THREE.terraingen.modifiers.Modifier
     
   get: (x, y, z=0.0) ->
     return min @source1.get(x,y,z), @source2.get(x,y,z)
+    
+    
+class THREE.terraingen.modifiers.Pow extends THREE.terraingen.modifiers.Modifier
+  constructor: (@source1, @source2) ->
+    
+  get: (x, y, z=0.0) ->
+    val = ( 1.0 + @source1.get(x,y,z) ) * 0.5
+    val = pow val, @source2.get(x,y,z)
+    return (val*2.0) - 1.0
+    
+    
+class THREE.terraingen.modifiers.Mix extends THREE.terraingen.modifiers.Modifier
+  constructor: (@source1, @source2, @control) ->
+    
+  get: (x,y,z=0.0) ->
+    val1 = @source1.get(x,y,z)
+    val2 = @source2.get(x,y,z)
+    mix = (1.0 + @control.get(x,y,z)) * 0.5
+    return (val1 * mix) + (val2 * (1.0-mix))
     
     
 class THREE.terraingen.modifiers.Cache extends THREE.terraingen.modifiers.Modifier

@@ -261,9 +261,9 @@
       segment_height = this.height / gridZ;
       normal = new THREE.Vector3(0, 0, 1);
       for (iz = _i = 0; _i < gridZ1; iz = _i += 1) {
-        y = iz * segment_height - height_half;
+        y = iz * segment_height;
         for (ix = _j = 0; _j < gridX1; ix = _j += 1) {
-          x = ix * segment_width - width_half;
+          x = ix * segment_width;
           hgt = this.source.get(x, y);
           this.geometry.vertices.push(new THREE.Vector3(x, hgt, y));
         }
@@ -287,7 +287,7 @@
             face.vertexNormals.push(normal.clone(), normal.clone(), normal.clone());
             this.geometry.faces.push(face);
             this.geometry.faceVertexUvs[0].push([uva, uvb, uvc]);
-            face = new THREE.Face3(b, c, d);
+            face = new THREE.Face3(d, b, c);
             face.normal.copy(normal);
             face.vertexNormals.push(normal.clone(), normal.clone(), normal.clone());
             this.geometry.faces.push(face);

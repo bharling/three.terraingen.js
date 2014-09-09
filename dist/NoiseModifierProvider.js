@@ -1,5 +1,5 @@
 (function() {
-  var THREE, abs, max, min,
+  var THREE, abs, max, min, pow,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -23,7 +23,7 @@
 
   })();
 
-  max = Math.max, min = Math.min, abs = Math.abs;
+  max = Math.max, min = Math.min, abs = Math.abs, pow = Math.pow;
 
   THREE.terraingen.modifiers.Constant = (function(_super) {
     __extends(Constant, _super);
@@ -189,6 +189,52 @@
     };
 
     return Min;
+
+  })(THREE.terraingen.modifiers.Modifier);
+
+  THREE.terraingen.modifiers.Pow = (function(_super) {
+    __extends(Pow, _super);
+
+    function Pow(source1, source2) {
+      this.source1 = source1;
+      this.source2 = source2;
+    }
+
+    Pow.prototype.get = function(x, y, z) {
+      var val;
+      if (z == null) {
+        z = 0.0;
+      }
+      val = (1.0 + this.source1.get(x, y, z)) * 0.5;
+      val = pow(val, this.source2.get(x, y, z));
+      return (val * 2.0) - 1.0;
+    };
+
+    return Pow;
+
+  })(THREE.terraingen.modifiers.Modifier);
+
+  THREE.terraingen.modifiers.Mix = (function(_super) {
+    __extends(Mix, _super);
+
+    function Mix(source1, source2, control) {
+      this.source1 = source1;
+      this.source2 = source2;
+      this.control = control;
+    }
+
+    Mix.prototype.get = function(x, y, z) {
+      var mix, val1, val2;
+      if (z == null) {
+        z = 0.0;
+      }
+      val1 = this.source1.get(x, y, z);
+      val2 = this.source2.get(x, y, z);
+      mix = (1.0 + this.control.get(x, y, z)) * 0.5;
+      return (val1 * mix) + (val2 * (1.0 - mix));
+    };
+
+    return Mix;
 
   })(THREE.terraingen.modifiers.Modifier);
 

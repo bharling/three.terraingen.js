@@ -10,17 +10,18 @@ var container, camera, scene, renderer, output;
 	var rng2 = new THREE.terraingen.MersenneTwisterProvider(8712937752032);
 	
 	// plug that into a height map provider
-	var noiseSource1 = new THREE.terraingen.PerlinHeightMapProvider(rng1.random, 12, 0.0067);
+	var noiseSource1 = new THREE.terraingen.generators.Perlin(rng1.random, 12, 0.0067);
 	
 	// lets mix in another
-	var noiseSource2 = new THREE.terraingen.PerlinHeightMapProvider(rng2.random, 4, 0.005);
+	var noiseSource2 = new THREE.terraingen.generators.Perlin(rng2.random, 6, 0.002);
 	
-	var abssource = new THREE.terraingen.modifiers.Abs( noiseSource2 )
+	// Modify the value with Math.abs() - gives a sand-dune like effect
+	var abssource = new THREE.terraingen.modifiers.Pow( noiseSource2, new THREE.terraingen.modifiers.Constant(2) )
 	
 	// lets have a constant
 	var myConst = new THREE.terraingen.modifiers.Constant( 0.2 );
 	
-	// lets max those 2
+	// lets choose the min of the 
 	var maxMod = new THREE.terraingen.modifiers.Min( noiseSource1, myConst );
 	
 	// add this to the other noise source
@@ -29,21 +30,35 @@ var container, camera, scene, renderer, output;
 	// scale down the height somewhat
 	var shrunk = new THREE.terraingen.modifiers.Multiply( combined, new THREE.terraingen.modifiers.Constant( 0.7 ));
 	
+	
+	sin = new THREE.terraingen.generators.SineX(
+			new THREE.terraingen.modifiers.Multiply(
+					shrunk, new THREE.terraingen.modifiers.Constant(0.01)
+			)
+	);
+	
+	mixed = new THREE.terraingen.modifiers.Mix( shrunk, new THREE.terraingen.modifiers.Constant(0.0), sin )
+	
 	// convert to unsigned
-	output = new THREE.terraingen.modifiers.Cache( new THREE.terraingen.modifiers.ConvertToUnsigned( shrunk ) );
+	output = new THREE.terraingen.modifiers.Cache( new THREE.terraingen.modifiers.ConvertToUnsigned( mixed ) );
+	
+	
+	
+	
+	
 	
 	// plug that into a geometry provider
 	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
 	geomProvider.source = output;
 	
 	// choose some origin in noise space
-	var x = 600;
-	var y = 776576;
+	var x = 500;
+	var y = 40;
 	
 	// plug in a mesh provider
 	var meshProvider = new THREE.terraingen.MeshProvider(x, y);
 	meshProvider.geometryProvider = geomProvider;	
-	meshProvider.lod = 0.01
+	meshProvider.lod = 0.001
 	
 	
 	bootstrap();

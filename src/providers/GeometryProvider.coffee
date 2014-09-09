@@ -204,11 +204,11 @@ class THREE.terraingen.GridGeometryProvider extends THREE.terraingen.GeometryPro
     normal = new THREE.Vector3 0, 0, 1
     
     for iz in [0 ... gridZ1] by 1
-      y = iz * segment_height - height_half
+      y = iz * segment_height
       
       for ix in [0 ... gridX1] by 1
         
-        x = ix * segment_width - width_half
+        x = ix * segment_width
         
         hgt = @source.get x, y
         
@@ -237,7 +237,7 @@ class THREE.terraingen.GridGeometryProvider extends THREE.terraingen.GeometryPro
         
         @geometry.faceVertexUvs[0].push [uva, uvb, uvc]
         
-        face = new THREE.Face3 b, c, d
+        face = new THREE.Face3 d, b, c
         face.normal.copy normal
         face.vertexNormals.push normal.clone(), normal.clone(), normal.clone()
         
