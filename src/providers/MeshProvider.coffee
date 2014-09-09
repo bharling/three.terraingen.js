@@ -6,11 +6,13 @@ class THREE.terraingen.MeshProvider
   
   geometryProvider : null
   materialProvider : null
-  mesh : null
   
   lod: 0.0001
   
   constructor: (@x=0, @y=0, @width=257, @height=257) ->
+    
+    
+  setRegion: (@x=0, @y=0, @width=257, @height=257) ->
   
   
   build: () ->
@@ -18,13 +20,11 @@ class THREE.terraingen.MeshProvider
     geom = @geometryProvider.get(@lod)
     geom.computeFaceNormals()
     geom.computeVertexNormals(true)
-    #material = new THREE.MeshBasicMaterial wireframe:true
     material = new THREE.MeshNormalMaterial({shading:THREE.SmoothShading, wireframe:true})
-    @mesh = new THREE.Mesh(geom, material)
+    mesh = new THREE.Mesh(geom, material)
     
   get: () ->
     @build()
-    @mesh
   
 
 	    

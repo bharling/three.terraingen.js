@@ -21,11 +21,11 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
     
     
   get:(maxVariance=0.05) ->
-    @btt = new THREE.terraingen.BTT(@x, @y, @width, @height, @source, maxVariance)
-    @btt.createVertexBuffer()
-    @btt.buildTree @width, @height
-    @btt.createIndexBuffer()
-    return @btt.geom
+    btt = new THREE.terraingen.BTT(@x, @y, @width, @height, @source, maxVariance)
+    #@btt.createVertexBuffer()
+    #@btt.buildTree @width, @height
+    #@btt.createIndexBuffer()
+    btt.build()
     
     
 # This code ported from the Director example by Patrick Murris
@@ -40,26 +40,36 @@ class THREE.terraingen.BTT
   heightCache : []
   
   constructor: (@x, @y, @width, @height, @heightMapProvider, @maxVariance) ->
-    @geom = new THREE.Geometry()
+    
+    
+    
+    
+  build: () ->
+    @tree = []
+    
+    geom = new THREE.Geometry()
+    @createVertexBuffer geom
+    @buildTree @width, @height, geom
+    @createIndexBuffer geom
+    geom
+    
+    
    
    
-  createVertexBuffer: () ->
-    nv = 0
+  createVertexBuffer: (geom) ->
     for i in [0 ... @width] by 1
       for j in [0 ... @height] by 1
-        #alt = (@heightMapProvider.getHeightAt i, j) * @heightScale
         alt = (@heightMapProvider.get @x+i, @y+j) * @heightScale
-        @geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
-        nv++
-    console.log @geom.vertices.length
+        geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
+    console.log geom.vertices.length
         
-  createIndexBuffer: () ->
+  createIndexBuffer: (geom) ->
     for i in [0 ... @tree.length] by 1
       if not @tree[i].lc?
         v1 = @tree[i].v1
         v2 = @tree[i].v2
         v3 = @tree[i].v3
-        @geom.faces.push new THREE.Face3 v3, v2, v1
+        geom.faces.push new THREE.Face3 v3, v2, v1
         
   getSeriazlized: () ->
     result = ""
@@ -74,10 +84,14 @@ class THREE.terraingen.BTT
     return v1: v1, v2: v2, v3: v3, ln:null, rn:null, bn:null, lc:null, rc:null
     
     
-  getVariance: (v1, v2, v3) ->
-    if Math.abs( @geom.vertices[v3].x - @geom.vertices[v1].x ) > @squareUnits or Math.abs(@geom.vertices[v3].z - @geom.vertices[v1].z) > @squareUnits
-      hi = Math.round(((@geom.vertices[v3].x / @squareUnits) - (@geom.vertices[v1].x / @squareUnits)) / 2 + (@geom.vertices[v1].x / @squareUnits))
-      hj = Math.round(((@geom.vertices[v3].z / @squareUnits) - (@geom.vertices[v1].z / @squareUnits)) / 2 + (@geom.vertices[v1].z / @squareUnits))
+  getVariance: (v1, v2, v3, geom) ->
+    
+    if typeof geom == 'undefined'
+      console.log v1,v2,v3
+    
+    if Math.abs( geom.vertices[v3].x - geom.vertices[v1].x ) > @squareUnits or Math.abs(geom.vertices[v3].z - geom.vertices[v1].z) > @squareUnits
+      hi = Math.round(((geom.vertices[v3].x / @squareUnits) - (geom.vertices[v1].x / @squareUnits)) / 2 + (geom.vertices[v1].x / @squareUnits))
+      hj = Math.round(((geom.vertices[v3].z / @squareUnits) - (geom.vertices[v1].z / @squareUnits)) / 2 + (geom.vertices[v1].z / @squareUnits))
       
       
       
@@ -85,62 +99,63 @@ class THREE.terraingen.BTT
       
       #alt = @heightMapProvider.getHeightAt hi, hj
       alt = @heightMapProvider.get @x+hi, @y+hj
-      v = Math.abs(alt - ((@geom.vertices[v1].y + @geom.vertices[v3].y) / 2))
-      v = Math.max(v, @getVariance(v2, vh, v1))
-      v = Math.max(v, @getVariance(v3, vh, v2))
+      v = Math.abs(alt - ((geom.vertices[v1].y + geom.vertices[v3].y) / 2))
+      v = Math.max(v, @getVariance(v2, vh, v1, geom))
+      v = Math.max(v, @getVariance(v3, vh, v2, geom))
     else
       v = 0
     return v
     
-  buildTree: (width, height) ->
+    
+  buildTree: (width, height, geom) ->
     @tree.push @newTri 0, width-1, width+(width*(height-1)) - 1
     @tree.push @newTri width-1+(width*(height-1)), (width*(height-1)), 0
     @tree[0].bn = 1
     @tree[1].bn = 0
-    @buildFace 0
-    @buildFace 1
+    @buildFace 0, geom
+    console.log geom
+    @buildFace 1, geom
     return
     
-  buildFace: (f) ->
-    
+  buildFace: (f, geom) ->
     
     if @tree[f].lc?
-      @buildFace @tree[f].lc
-      @buildFace @tree[f].rc
+      @buildFace @tree[f].lc, geom
+      @buildFace @tree[f].rc, geom
     else
       v1 = @tree[f].v1
       v2 = @tree[f].v2
       v3 = @tree[f].v3
       
       
-      if @getVariance(v1,v2,v3) > @maxVariance
+      if @getVariance(v1,v2,v3, geom) > @maxVariance
         
-        @splitFace f
-        @buildFace @tree[f].lc
-        @buildFace @tree[f].rc
+        @splitFace f, geom
+        @buildFace @tree[f].lc, geom
+        @buildFace @tree[f].rc, geom
     return
   
-  splitFace: (f) ->
+  splitFace: (f, geom) ->
     
     
     if @tree[f].bn?
       if @tree[@tree[f].bn].bn isnt f
-        @splitFace @tree[f].bn
-      @splitFace2 f
-      @splitFace2 @tree[f].bn
+        @splitFace @tree[f].bn, geom
+      @splitFace2 f, geom
+      @splitFace2 @tree[f].bn, geom
       
       @tree[@tree[f].lc].rn = @tree[@tree[f].bn].rc
       @tree[@tree[f].rc].ln = @tree[@tree[f].bn].lc
       @tree[@tree[@tree[f].bn].lc].rn = @tree[f].rc
       @tree[@tree[@tree[f].bn].rc].ln = @tree[f].lc
     else
-      @splitFace2 f
+      @splitFace2 f, geom
     return
   
   getApexIndex: (v1, v2, v3) ->
   
   
-  splitFace2: (f) ->
+  splitFace2: (f, geom) ->
     
     
     v1 = @tree[f].v1
@@ -148,8 +163,8 @@ class THREE.terraingen.BTT
     v3 = @tree[f].v3
     
     
-    hi = ((@geom.vertices[v3].x / @squareUnits) - (@geom.vertices[v1].x / @squareUnits)) / 2 + (@geom.vertices[v1].x / @squareUnits)
-    hj = ((@geom.vertices[v3].z / @squareUnits) - (@geom.vertices[v1].z / @squareUnits)) / 2 + (@geom.vertices[v1].z / @squareUnits)
+    hi = ((geom.vertices[v3].x / @squareUnits) - (geom.vertices[v1].x / @squareUnits)) / 2 + (geom.vertices[v1].x / @squareUnits)
+    hj = ((geom.vertices[v3].z / @squareUnits) - (geom.vertices[v1].z / @squareUnits)) / 2 + (geom.vertices[v1].z / @squareUnits)
     vh = Math.round((hi)*(@width) + hj)
     @tree.push @newTri v2, vh, v1
     @tree[f].lc = @tree.length-1

@@ -1,5 +1,5 @@
 (function() {
-  var THREE, floor, sqrt,
+  var THREE, cos, floor, sin, sqrt,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -8,6 +8,8 @@
   THREE.terraingen = THREE.terraingen || {};
 
   THREE.terraingen.generators = THREE.terraingen.generators || {};
+
+  floor = Math.floor, sqrt = Math.sqrt, sin = Math.sin, cos = Math.cos;
 
   THREE.terraingen.generators.Generator = (function() {
     function Generator() {}
@@ -50,6 +52,44 @@
 
   })(THREE.terraingen.generators.Generator);
 
+  THREE.terraingen.generators.SineY = (function(_super) {
+    __extends(SineY, _super);
+
+    function SineY(scaleSource) {
+      this.scaleSource = scaleSource;
+    }
+
+    SineY.prototype.get = function(x, y, z) {
+      if (z == null) {
+        z = 0.0;
+      }
+      return Math.sin(y * this.scaleSource.get(x, y, z));
+    };
+
+    return SineY;
+
+  })(THREE.terraingen.generators.Generator);
+
+  THREE.terraingen.generators.SineCosXY = (function(_super) {
+    __extends(SineCosXY, _super);
+
+    function SineCosXY(scaleSource) {
+      this.scaleSource = scaleSource;
+    }
+
+    SineCosXY.prototype.get = function(x, y, z) {
+      var m;
+      if (z == null) {
+        z = 0.0;
+      }
+      m = this.scaleSource.get(x, y, z);
+      return (sin(x + cos(y))) * m;
+    };
+
+    return SineCosXY;
+
+  })(THREE.terraingen.generators.Generator);
+
   THREE.terraingen.generators.ImageMap = (function(_super) {
     __extends(ImageMap, _super);
 
@@ -64,8 +104,6 @@
     return ImageMap;
 
   })(THREE.terraingen.generators.Generator);
-
-  floor = Math.floor, sqrt = Math.sqrt;
 
   THREE.terraingen.generators.Perlin = (function(_super) {
     __extends(Perlin, _super);

@@ -43,14 +43,12 @@
     }
 
     BTTGeometryProvider.prototype.get = function(maxVariance) {
+      var btt;
       if (maxVariance == null) {
         maxVariance = 0.05;
       }
-      this.btt = new THREE.terraingen.BTT(this.x, this.y, this.width, this.height, this.source, maxVariance);
-      this.btt.createVertexBuffer();
-      this.btt.buildTree(this.width, this.height);
-      this.btt.createIndexBuffer();
-      return this.btt.geom;
+      btt = new THREE.terraingen.BTT(this.x, this.y, this.width, this.height, this.source, maxVariance);
+      return btt.build();
     };
 
     return BTTGeometryProvider;
@@ -75,23 +73,30 @@
       this.height = height;
       this.heightMapProvider = heightMapProvider;
       this.maxVariance = maxVariance;
-      this.geom = new THREE.Geometry();
     }
 
-    BTT.prototype.createVertexBuffer = function() {
-      var alt, i, j, nv, _i, _j, _ref, _ref1;
-      nv = 0;
+    BTT.prototype.build = function() {
+      var geom;
+      this.tree = [];
+      geom = new THREE.Geometry();
+      this.createVertexBuffer(geom);
+      this.buildTree(this.width, this.height, geom);
+      this.createIndexBuffer(geom);
+      return geom;
+    };
+
+    BTT.prototype.createVertexBuffer = function(geom) {
+      var alt, i, j, _i, _j, _ref, _ref1;
       for (i = _i = 0, _ref = this.width; _i < _ref; i = _i += 1) {
         for (j = _j = 0, _ref1 = this.height; _j < _ref1; j = _j += 1) {
           alt = (this.heightMapProvider.get(this.x + i, this.y + j)) * this.heightScale;
-          this.geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits));
-          nv++;
+          geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits));
         }
       }
-      return console.log(this.geom.vertices.length);
+      return console.log(geom.vertices.length);
     };
 
-    BTT.prototype.createIndexBuffer = function() {
+    BTT.prototype.createIndexBuffer = function(geom) {
       var i, v1, v2, v3, _i, _ref, _results;
       _results = [];
       for (i = _i = 0, _ref = this.tree.length; _i < _ref; i = _i += 1) {
@@ -99,7 +104,7 @@
           v1 = this.tree[i].v1;
           v2 = this.tree[i].v2;
           v3 = this.tree[i].v3;
-          _results.push(this.geom.faces.push(new THREE.Face3(v3, v2, v1)));
+          _results.push(geom.faces.push(new THREE.Face3(v3, v2, v1)));
         } else {
           _results.push(void 0);
         }
@@ -133,73 +138,77 @@
       };
     };
 
-    BTT.prototype.getVariance = function(v1, v2, v3) {
+    BTT.prototype.getVariance = function(v1, v2, v3, geom) {
       var alt, hi, hj, v, vh;
-      if (Math.abs(this.geom.vertices[v3].x - this.geom.vertices[v1].x) > this.squareUnits || Math.abs(this.geom.vertices[v3].z - this.geom.vertices[v1].z) > this.squareUnits) {
-        hi = Math.round(((this.geom.vertices[v3].x / this.squareUnits) - (this.geom.vertices[v1].x / this.squareUnits)) / 2 + (this.geom.vertices[v1].x / this.squareUnits));
-        hj = Math.round(((this.geom.vertices[v3].z / this.squareUnits) - (this.geom.vertices[v1].z / this.squareUnits)) / 2 + (this.geom.vertices[v1].z / this.squareUnits));
+      if (typeof geom === 'undefined') {
+        console.log(v1, v2, v3);
+      }
+      if (Math.abs(geom.vertices[v3].x - geom.vertices[v1].x) > this.squareUnits || Math.abs(geom.vertices[v3].z - geom.vertices[v1].z) > this.squareUnits) {
+        hi = Math.round(((geom.vertices[v3].x / this.squareUnits) - (geom.vertices[v1].x / this.squareUnits)) / 2 + (geom.vertices[v1].x / this.squareUnits));
+        hj = Math.round(((geom.vertices[v3].z / this.squareUnits) - (geom.vertices[v1].z / this.squareUnits)) / 2 + (geom.vertices[v1].z / this.squareUnits));
         vh = Math.round(hi * this.width + hj);
         alt = this.heightMapProvider.get(this.x + hi, this.y + hj);
-        v = Math.abs(alt - ((this.geom.vertices[v1].y + this.geom.vertices[v3].y) / 2));
-        v = Math.max(v, this.getVariance(v2, vh, v1));
-        v = Math.max(v, this.getVariance(v3, vh, v2));
+        v = Math.abs(alt - ((geom.vertices[v1].y + geom.vertices[v3].y) / 2));
+        v = Math.max(v, this.getVariance(v2, vh, v1, geom));
+        v = Math.max(v, this.getVariance(v3, vh, v2, geom));
       } else {
         v = 0;
       }
       return v;
     };
 
-    BTT.prototype.buildTree = function(width, height) {
+    BTT.prototype.buildTree = function(width, height, geom) {
       this.tree.push(this.newTri(0, width - 1, width + (width * (height - 1)) - 1));
       this.tree.push(this.newTri(width - 1 + (width * (height - 1)), width * (height - 1), 0));
       this.tree[0].bn = 1;
       this.tree[1].bn = 0;
-      this.buildFace(0);
-      this.buildFace(1);
+      this.buildFace(0, geom);
+      console.log(geom);
+      this.buildFace(1, geom);
     };
 
-    BTT.prototype.buildFace = function(f) {
+    BTT.prototype.buildFace = function(f, geom) {
       var v1, v2, v3;
       if (this.tree[f].lc != null) {
-        this.buildFace(this.tree[f].lc);
-        this.buildFace(this.tree[f].rc);
+        this.buildFace(this.tree[f].lc, geom);
+        this.buildFace(this.tree[f].rc, geom);
       } else {
         v1 = this.tree[f].v1;
         v2 = this.tree[f].v2;
         v3 = this.tree[f].v3;
-        if (this.getVariance(v1, v2, v3) > this.maxVariance) {
-          this.splitFace(f);
-          this.buildFace(this.tree[f].lc);
-          this.buildFace(this.tree[f].rc);
+        if (this.getVariance(v1, v2, v3, geom) > this.maxVariance) {
+          this.splitFace(f, geom);
+          this.buildFace(this.tree[f].lc, geom);
+          this.buildFace(this.tree[f].rc, geom);
         }
       }
     };
 
-    BTT.prototype.splitFace = function(f) {
+    BTT.prototype.splitFace = function(f, geom) {
       if (this.tree[f].bn != null) {
         if (this.tree[this.tree[f].bn].bn !== f) {
-          this.splitFace(this.tree[f].bn);
+          this.splitFace(this.tree[f].bn, geom);
         }
-        this.splitFace2(f);
-        this.splitFace2(this.tree[f].bn);
+        this.splitFace2(f, geom);
+        this.splitFace2(this.tree[f].bn, geom);
         this.tree[this.tree[f].lc].rn = this.tree[this.tree[f].bn].rc;
         this.tree[this.tree[f].rc].ln = this.tree[this.tree[f].bn].lc;
         this.tree[this.tree[this.tree[f].bn].lc].rn = this.tree[f].rc;
         this.tree[this.tree[this.tree[f].bn].rc].ln = this.tree[f].lc;
       } else {
-        this.splitFace2(f);
+        this.splitFace2(f, geom);
       }
     };
 
     BTT.prototype.getApexIndex = function(v1, v2, v3) {};
 
-    BTT.prototype.splitFace2 = function(f) {
+    BTT.prototype.splitFace2 = function(f, geom) {
       var hi, hj, v1, v2, v3, vh;
       v1 = this.tree[f].v1;
       v2 = this.tree[f].v2;
       v3 = this.tree[f].v3;
-      hi = ((this.geom.vertices[v3].x / this.squareUnits) - (this.geom.vertices[v1].x / this.squareUnits)) / 2 + (this.geom.vertices[v1].x / this.squareUnits);
-      hj = ((this.geom.vertices[v3].z / this.squareUnits) - (this.geom.vertices[v1].z / this.squareUnits)) / 2 + (this.geom.vertices[v1].z / this.squareUnits);
+      hi = ((geom.vertices[v3].x / this.squareUnits) - (geom.vertices[v1].x / this.squareUnits)) / 2 + (geom.vertices[v1].x / this.squareUnits);
+      hj = ((geom.vertices[v3].z / this.squareUnits) - (geom.vertices[v1].z / this.squareUnits)) / 2 + (geom.vertices[v1].z / this.squareUnits);
       vh = Math.round(hi * this.width + hj);
       this.tree.push(this.newTri(v2, vh, v1));
       this.tree[f].lc = this.tree.length - 1;

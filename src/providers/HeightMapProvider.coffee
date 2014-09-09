@@ -5,6 +5,9 @@ THREE.terraingen = THREE.terraingen || {}
 THREE.terraingen.generators = THREE.terraingen.generators || {}
 
 
+{floor, sqrt, sin, cos} = Math
+
+
 class THREE.terraingen.generators.Generator
   filters : []
   features : []
@@ -25,6 +28,19 @@ class THREE.terraingen.generators.SineX extends THREE.terraingen.generators.Gene
   get: (x, y, z=0.0) ->
     Math.sin x * @scaleSource.get x, y, z
     
+class THREE.terraingen.generators.SineY extends THREE.terraingen.generators.Generator
+  constructor: (@scaleSource) ->
+  
+  get: (x, y, z=0.0) ->
+    Math.sin y * @scaleSource.get x, y, z
+    
+class THREE.terraingen.generators.SineCosXY extends THREE.terraingen.generators.Generator
+  constructor: (@scaleSource) ->
+  
+  get: (x, y, z=0.0) ->
+    m = @scaleSource.get x, y, z
+    (sin x + cos y) * m
+    
     
 class THREE.terraingen.generators.ImageMap extends THREE.terraingen.generators.Generator
   constructor: (imagePath) ->
@@ -36,7 +52,7 @@ class THREE.terraingen.generators.ImageMap extends THREE.terraingen.generators.G
 	  
 # Code below from https://gist.github.com/sj26/6145489
 
-{floor, sqrt} = Math
+
 
 class THREE.terraingen.generators.Perlin extends THREE.terraingen.generators.Generator
   cache: {}

@@ -1,4 +1,4 @@
-var container, camera, scene, renderer, output;
+var container, camera, scene, renderer, output, mesh;
 
 (function(THREE){
 	
@@ -28,19 +28,19 @@ var container, camera, scene, renderer, output;
 	var combined = new THREE.terraingen.modifiers.Add( maxMod, abssource );
 	
 	// scale down the height somewhat
-	var shrunk = new THREE.terraingen.modifiers.Multiply( combined, new THREE.terraingen.modifiers.Constant( 0.7 ));
+	var shrunk = new THREE.terraingen.modifiers.Multiply( combined, new THREE.terraingen.modifiers.Constant( 0.4 ));
 	
 	
 	sin = new THREE.terraingen.generators.SineX(
 			new THREE.terraingen.modifiers.Multiply(
-					shrunk, new THREE.terraingen.modifiers.Constant(0.01)
+					shrunk, new THREE.terraingen.modifiers.Constant(0.007)
 			)
 	);
 	
-	mixed = new THREE.terraingen.modifiers.Mix( shrunk, new THREE.terraingen.modifiers.Constant(0.0), sin )
+	//mixed = new THREE.terraingen.modifiers.Mix( shrunk, new THREE.terraingen.modifiers.Constant(0.0), sin )
 	
 	// convert to unsigned
-	output = new THREE.terraingen.modifiers.Cache( new THREE.terraingen.modifiers.ConvertToUnsigned( mixed ) );
+	output = new THREE.terraingen.modifiers.Cache( new THREE.terraingen.modifiers.ConvertToUnsigned( shrunk ) );
 	
 	
 	
@@ -58,15 +58,30 @@ var container, camera, scene, renderer, output;
 	// plug in a mesh provider
 	var meshProvider = new THREE.terraingen.MeshProvider(x, y);
 	meshProvider.geometryProvider = geomProvider;	
-	meshProvider.lod = 0.001
+	
+	
+	
+	
 	
 	
 	bootstrap();
 
-	var mesh = meshProvider.get();	
+	//var mesh = meshProvider.get();	
+	//mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
+	//mesh.scale.y = 300;
+	
+	var patch = new THREE.terraingen.TerrainPatch( 512, 512, 257, 257, meshProvider );
+	
+	patch.addLOD(0.05, 1500);
+	patch.addLOD(0.01, 1000);
+	patch.addLOD(0.005, 750);
+	patch.addLOD(0.001, 500);
+	patch.addLOD(0.0003, 200);
+	
+	mesh = patch.get()
+	
 	mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
 	mesh.scale.y = 300;
-	
 	
 	scene.add(mesh);
 	
@@ -137,8 +152,8 @@ var container, camera, scene, renderer, output;
 
 		//mesh.rotation.y = time * 0.2;
  		
-		
-
+		camera.position.multiplyScalar(0.999);
+		mesh.update(camera);
 		renderer.render( scene, camera );
  	}
 	
