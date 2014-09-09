@@ -17,12 +17,13 @@
     function MeshProvider(x, y, width, height) {
       this.x = x != null ? x : 0;
       this.y = y != null ? y : 0;
-      this.width = width != null ? width : 256;
-      this.height = height != null ? height : 256;
+      this.width = width != null ? width : 257;
+      this.height = height != null ? height : 257;
     }
 
     MeshProvider.prototype.build = function() {
       var geom, material;
+      this.geometryProvider.setRegion(this.x, this.y, this.width, this.height);
       geom = this.geometryProvider.get(this.lod);
       geom.computeFaceNormals();
       geom.computeVertexNormals(true);

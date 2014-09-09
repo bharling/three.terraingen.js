@@ -1,8 +1,15 @@
 class THREE.terraingen.GeometryProvider
   geometry : null
-  heightMapProvider: null
+  source: null
+  x: 0
+  y: 0
+  width:257
+  height:257
   
-  constructor:(@x=0, @y=0, @width=256, @height=256) ->
+  constructor:() ->
+    
+    
+  setRegion: (@x=0, @y=0, @width=257, @height=257) ->
   
   get:() ->
     new THREE.BufferGeometry
@@ -14,7 +21,7 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
     
     
   get:(maxVariance=0.05) ->
-    @btt = new THREE.terraingen.BTT(@width, @height, @heightMapProvider, maxVariance)
+    @btt = new THREE.terraingen.BTT(@x, @y, @width, @height, @source, maxVariance)
     @btt.createVertexBuffer()
     @btt.buildTree @width, @height
     @btt.createIndexBuffer()
@@ -32,19 +39,8 @@ class THREE.terraingen.BTT
   heightScale: 1
   heightCache : []
   
-  cacheHeightMap: (width, height) ->
-    for i in [0 ... width] by 1
-      for j in [0 ... height] by 1
-        @heightCache.push( @heightMapProvider.getHeightAt(j, i))
-        
-  getCachedHeight: (x, y) ->
-    return @heightCache[x + (@width*y)]
-    
-  
-  
-  constructor: (@width, @height, @heightMapProvider, @maxVariance) ->
+  constructor: (@x, @y, @width, @height, @heightMapProvider, @maxVariance) ->
     @geom = new THREE.Geometry()
-    @cacheHeightMap @width, @height
    
    
   createVertexBuffer: () ->
@@ -52,7 +48,7 @@ class THREE.terraingen.BTT
     for i in [0 ... @width] by 1
       for j in [0 ... @height] by 1
         #alt = (@heightMapProvider.getHeightAt i, j) * @heightScale
-        alt = (@getCachedHeight i, j) * @heightScale
+        alt = (@heightMapProvider.get @x+i, @y+j) * @heightScale
         @geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
         nv++
     console.log @geom.vertices.length
@@ -88,7 +84,7 @@ class THREE.terraingen.BTT
       vh = Math.round((hi)*(@width) + hj)
       
       #alt = @heightMapProvider.getHeightAt hi, hj
-      alt = @getCachedHeight hi, hj
+      alt = @heightMapProvider.get @x+hi, @y+hj
       v = Math.abs(alt - ((@geom.vertices[v1].y + @geom.vertices[v3].y) / 2))
       v = Math.max(v, @getVariance(v2, vh, v1))
       v = Math.max(v, @getVariance(v3, vh, v2))
@@ -214,7 +210,7 @@ class THREE.terraingen.GridGeometryProvider extends THREE.terraingen.GeometryPro
         
         x = ix * segment_width - width_half
         
-        hgt = @heightMapProvider.getHeightAt x, y
+        hgt = @source.get x, y
         
         @geometry.vertices.push new THREE.Vector3 x, hgt, y
         

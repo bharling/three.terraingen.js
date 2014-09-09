@@ -10,10 +10,11 @@ class THREE.terraingen.MeshProvider
   
   lod: 0.0001
   
-  constructor: (@x=0, @y=0, @width=256, @height=256) ->
+  constructor: (@x=0, @y=0, @width=257, @height=257) ->
   
   
   build: () ->
+    @geometryProvider.setRegion @x, @y, @width, @height
     geom = @geometryProvider.get(@lod)
     geom.computeFaceNormals()
     geom.computeVertexNormals(true)

@@ -1,29 +1,54 @@
+var container, camera, scene, renderer, output;
+
 (function(THREE){
-	var container, camera, scene, renderer;
-	var noisegen = new THREE.terraingen.MersenneTwisterProvider("barrie");
-	var hmGen = new THREE.terraingen.PerlinHeightMapProvider(noisegen.random, 10, 0.004);
-	
-	console.log(hmGen.getHeightAt(20,68))
-	
-	//var road = new THREE.terraingen.features.Road([0,10], [20,120], 2)
-	
-	//hmGen.features = [new THREE.terraingen.features.Roads([road])]
 	
 	
+	// start with a random number generator
+	var rng1 = new THREE.terraingen.MersenneTwisterProvider(23432432);
 	
-	hmGen.filters = [ new THREE.terraingen.filters.Cliffs(0.3, 0.2), new THREE.terraingen.filters.Cliffs(0.7, 0.1)]
+	// lets have another as well
+	var rng2 = new THREE.terraingen.MersenneTwisterProvider(8712937752032);
+	
+	// plug that into a height map provider
+	var noiseSource1 = new THREE.terraingen.PerlinHeightMapProvider(rng1.random, 12, 0.0067);
+	
+	// lets mix in another
+	var noiseSource2 = new THREE.terraingen.PerlinHeightMapProvider(rng2.random, 4, 0.005);
+	
+	var abssource = new THREE.terraingen.modifiers.Abs( noiseSource2 )
+	
+	// lets have a constant
+	var myConst = new THREE.terraingen.modifiers.Constant( 0.2 );
+	
+	// lets max those 2
+	var maxMod = new THREE.terraingen.modifiers.Min( noiseSource1, myConst );
+	
+	// add this to the other noise source
+	var combined = new THREE.terraingen.modifiers.Add( maxMod, abssource );
+	
+	// scale down the height somewhat
+	var shrunk = new THREE.terraingen.modifiers.Multiply( combined, new THREE.terraingen.modifiers.Constant( 0.7 ));
+	
+	// convert to unsigned
+	output = new THREE.terraingen.modifiers.Cache( new THREE.terraingen.modifiers.ConvertToUnsigned( shrunk ) );
+	
+	// plug that into a geometry provider
 	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
-	geomProvider.heightMapProvider = hmGen;
-	var meshProvider = new THREE.terraingen.MeshProvider();
+	geomProvider.source = output;
+	
+	// choose some origin in noise space
+	var x = 600;
+	var y = 80;
+	
+	// plug in a mesh provider
+	var meshProvider = new THREE.terraingen.MeshProvider(x, y);
 	meshProvider.geometryProvider = geomProvider;	
+	meshProvider.lod = 0.001
 	
 	
 	bootstrap();
-	
-	meshProvider.lod = 0.0006
-	
-	var mesh = meshProvider.get();
-	
+
+	var mesh = meshProvider.get();	
 	mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
 	mesh.scale.y = 300;
 	
@@ -31,14 +56,14 @@
 	scene.add(mesh);
 	
 	mesh.rotation.x = 4
-	//drawHeightMap( hmGen );
+	//drawHeightMap( hmGen, x, y );
 	
 	
 	window.toggleWireframe = function () {
 		mesh.material.wireframe = !mesh.material.wireframe;
 	}
 	
- 	function drawHeightMap (mapProvider) {
+ 	function drawHeightMap (mapProvider, xOffset, yOffset) {
  		// setup a canvas to hold the heightmap
  		var canvas = document.createElement('canvas');
  		canvas.id = "heightMap";
@@ -54,7 +79,7 @@
  		for (var x = 0; x < 256; x++) {
  			for (var y = 0; y < 256; y++) {
  				var hgt = 0.0; 
- 				hgt += hmGen.getHeightAt(x,y);
+ 				hgt += hmGen.getHeightAt(xOffset + x,yOffset + 256 - y);
  				var pix = Math.floor( (1.0-hgt) * 256 );
  				d[0] = d[1] = d[2] = pix;
  				d[3] = 255;

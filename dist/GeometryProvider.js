@@ -5,14 +5,24 @@
   THREE.terraingen.GeometryProvider = (function() {
     GeometryProvider.prototype.geometry = null;
 
-    GeometryProvider.prototype.heightMapProvider = null;
+    GeometryProvider.prototype.source = null;
 
-    function GeometryProvider(x, y, width, height) {
+    GeometryProvider.prototype.x = 0;
+
+    GeometryProvider.prototype.y = 0;
+
+    GeometryProvider.prototype.width = 257;
+
+    GeometryProvider.prototype.height = 257;
+
+    function GeometryProvider() {}
+
+    GeometryProvider.prototype.setRegion = function(x, y, width, height) {
       this.x = x != null ? x : 0;
       this.y = y != null ? y : 0;
-      this.width = width != null ? width : 256;
-      this.height = height != null ? height : 256;
-    }
+      this.width = width != null ? width : 257;
+      this.height = height != null ? height : 257;
+    };
 
     GeometryProvider.prototype.get = function() {
       return new THREE.BufferGeometry;
@@ -36,7 +46,7 @@
       if (maxVariance == null) {
         maxVariance = 0.05;
       }
-      this.btt = new THREE.terraingen.BTT(this.width, this.height, this.heightMapProvider, maxVariance);
+      this.btt = new THREE.terraingen.BTT(this.x, this.y, this.width, this.height, this.source, maxVariance);
       this.btt.createVertexBuffer();
       this.btt.buildTree(this.width, this.height);
       this.btt.createIndexBuffer();
@@ -58,33 +68,14 @@
 
     BTT.prototype.heightCache = [];
 
-    BTT.prototype.cacheHeightMap = function(width, height) {
-      var i, j, _i, _results;
-      _results = [];
-      for (i = _i = 0; _i < width; i = _i += 1) {
-        _results.push((function() {
-          var _j, _results1;
-          _results1 = [];
-          for (j = _j = 0; _j < height; j = _j += 1) {
-            _results1.push(this.heightCache.push(this.heightMapProvider.getHeightAt(j, i)));
-          }
-          return _results1;
-        }).call(this));
-      }
-      return _results;
-    };
-
-    BTT.prototype.getCachedHeight = function(x, y) {
-      return this.heightCache[x + (this.width * y)];
-    };
-
-    function BTT(width, height, heightMapProvider, maxVariance) {
+    function BTT(x, y, width, height, heightMapProvider, maxVariance) {
+      this.x = x;
+      this.y = y;
       this.width = width;
       this.height = height;
       this.heightMapProvider = heightMapProvider;
       this.maxVariance = maxVariance;
       this.geom = new THREE.Geometry();
-      this.cacheHeightMap(this.width, this.height);
     }
 
     BTT.prototype.createVertexBuffer = function() {
@@ -92,7 +83,7 @@
       nv = 0;
       for (i = _i = 0, _ref = this.width; _i < _ref; i = _i += 1) {
         for (j = _j = 0, _ref1 = this.height; _j < _ref1; j = _j += 1) {
-          alt = (this.getCachedHeight(i, j)) * this.heightScale;
+          alt = (this.heightMapProvider.get(this.x + i, this.y + j)) * this.heightScale;
           this.geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits));
           nv++;
         }
@@ -148,7 +139,7 @@
         hi = Math.round(((this.geom.vertices[v3].x / this.squareUnits) - (this.geom.vertices[v1].x / this.squareUnits)) / 2 + (this.geom.vertices[v1].x / this.squareUnits));
         hj = Math.round(((this.geom.vertices[v3].z / this.squareUnits) - (this.geom.vertices[v1].z / this.squareUnits)) / 2 + (this.geom.vertices[v1].z / this.squareUnits));
         vh = Math.round(hi * this.width + hj);
-        alt = this.getCachedHeight(hi, hj);
+        alt = this.heightMapProvider.get(this.x + hi, this.y + hj);
         v = Math.abs(alt - ((this.geom.vertices[v1].y + this.geom.vertices[v3].y) / 2));
         v = Math.max(v, this.getVariance(v2, vh, v1));
         v = Math.max(v, this.getVariance(v3, vh, v2));
@@ -273,7 +264,7 @@
         y = iz * segment_height - height_half;
         for (ix = _j = 0; _j < gridX1; ix = _j += 1) {
           x = ix * segment_width - width_half;
-          hgt = this.heightMapProvider.getHeightAt(x, y);
+          hgt = this.source.get(x, y);
           this.geometry.vertices.push(new THREE.Vector3(x, hgt, y));
         }
       }

@@ -18,7 +18,10 @@
     constructor: function(RNGFunction) {
       this.RNGFunction = RNGFunction != null ? RNGFunction : Math.random;
     },
-    getHeightAt: function(x, y) {
+    get: function(x, y, z) {
+      if (z == null) {
+        z = 0.0;
+      }
       return this.RNGFunction();
     }
   });
@@ -31,7 +34,10 @@
       return _ref;
     }
 
-    SineWaveHeightMapProvider.prototype.getHeightAt = function(x, y) {
+    SineWaveHeightMapProvider.prototype.get = function(x, y, z) {
+      if (z == null) {
+        z = 0.0;
+      }
       return Math.sin(x);
     };
 
@@ -44,7 +50,11 @@
 
     function ImageHeightMapProvider(imagePath) {}
 
-    ImageHeightMapProvider.prototype.getHeightAt = function(x, y) {};
+    ImageHeightMapProvider.prototype.get = function(x, y, z) {
+      if (z == null) {
+        z = 0.0;
+      }
+    };
 
     return ImageHeightMapProvider;
 
@@ -89,8 +99,11 @@
       return g[0] * x + g[1] * y;
     };
 
-    PerlinHeightMapProvider.prototype.getHeightAt = function(x, y) {
-      var amplitude, filter, hgt, o, _i, _j, _len, _ref1, _ref2;
+    PerlinHeightMapProvider.prototype.get = function(x, y, z) {
+      var amplitude, hgt, o, _i, _ref1;
+      if (z == null) {
+        z = 0.0;
+      }
       hgt = 0.0;
       amplitude = 1.0;
       x *= this.scale;
@@ -100,12 +113,6 @@
         x *= 2.0;
         y *= 2.0;
         amplitude *= 0.5;
-      }
-      hgt = (hgt + 1.0) * 0.5;
-      _ref2 = this.filters;
-      for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
-        filter = _ref2[_j];
-        hgt = filter.apply(hgt);
       }
       return hgt;
     };
