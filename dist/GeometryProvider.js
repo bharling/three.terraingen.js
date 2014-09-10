@@ -71,8 +71,8 @@
           edgeVerts.push(geom.vertices[face.c]);
         }
         if (edgeVerts.length === 2) {
-          edgeVerts[0].y -= 200;
-          edgeVerts[1].y -= 200;
+          edgeVerts[0].y -= 0.02;
+          edgeVerts[1].y -= 0.02;
         }
       }
       return geom;
@@ -132,23 +132,24 @@
     };
 
     BTT.prototype.createIndexBuffer = function(geom) {
-      var i, uva, uvb, uvc, v1, v2, v3, _i, _ref, _results;
-      _results = [];
+      var h, i, uva, uvb, uvc, v1, v2, v3, w, _i, _ref, _v1, _v2, _v3;
+      w = this.width * this.squareUnits;
+      h = this.height * this.squareUnits;
       for (i = _i = 0, _ref = this.tree.length; _i < _ref; i = _i += 1) {
         if (this.tree[i].lc == null) {
           v1 = this.tree[i].v1;
           v2 = this.tree[i].v2;
           v3 = this.tree[i].v3;
           geom.faces.push(new THREE.Face3(v1, v2, v3));
-          uva = new THREE.Vector2(v1.x / this.width, v1.z / this.height);
-          uvb = new THREE.Vector2(v2.x / this.width, v2.z / this.height);
-          uvc = new THREE.Vector2(v3.x / this.width, v3.z / this.height);
-          _results.push(geom.faceVertexUvs[0].push([uva, uvb, uvc]));
-        } else {
-          _results.push(void 0);
+          _v1 = geom.vertices[v1];
+          _v2 = geom.vertices[v2];
+          _v3 = geom.vertices[v3];
+          uva = new THREE.Vector2(_v1.x / w, _v1.z / h);
+          uvb = new THREE.Vector2(_v2.x / w, _v2.z / h);
+          uvc = new THREE.Vector2(_v3.x / w, _v3.z / h);
+          geom.faceVertexUvs[0].push([uva, uvb, uvc]);
         }
       }
-      return _results;
     };
 
     BTT.prototype.getSeriazlized = function() {

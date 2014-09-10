@@ -46,8 +46,8 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
       if uvc.x == 0 or uvc.x == 1 or uvc.y == 0 or uvc.y == 1
         edgeVerts.push geom.vertices[face.c]
       if edgeVerts.length == 2
-        edgeVerts[0].y -= 200
-        edgeVerts[1].y -= 200
+        edgeVerts[0].y -= 0.02
+        edgeVerts[1].y -= 0.02
     geom
       
         
@@ -94,6 +94,8 @@ class THREE.terraingen.BTT
         
         
   createIndexBuffer: (geom) ->
+    w = @width*@squareUnits
+    h = @height*@squareUnits
     for i in [0 ... @tree.length] by 1
       if not @tree[i].lc?
         v1 = @tree[i].v1
@@ -101,11 +103,19 @@ class THREE.terraingen.BTT
         v3 = @tree[i].v3
         geom.faces.push new THREE.Face3 v1, v2, v3
         
-        uva = new THREE.Vector2 v1.x/@width, v1.z/@height
-        uvb = new THREE.Vector2 v2.x/@width, v2.z/@height
-        uvc = new THREE.Vector2 v3.x/@width, v3.z/@height
+        _v1 = geom.vertices[v1]
+        _v2 = geom.vertices[v2]
+        _v3 = geom.vertices[v3]
+        
+        
+        
+        
+        uva = new THREE.Vector2 _v1.x/w, _v1.z/h
+        uvb = new THREE.Vector2 _v2.x/w, _v2.z/h
+        uvc = new THREE.Vector2 _v3.x/w, _v3.z/h
         
         geom.faceVertexUvs[0].push([uva, uvb, uvc])
+    return
         
   getSeriazlized: () ->
     result = ""
