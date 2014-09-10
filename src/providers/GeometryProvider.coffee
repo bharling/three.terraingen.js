@@ -33,14 +33,16 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
 # Much credit and appreciation to him..
     
 class THREE.terraingen.BTT
-  tree: []
   maxVariance: 0.02
   squareUnits: 1
   heightScale: 1
-  heightCache : []
   
   constructor: (@x, @y, @width, @height, @heightMapProvider, @maxVariance) ->
+    @tree = []
     
+    
+  cleanup: () ->
+    @tree = []
     
     
     
@@ -51,6 +53,7 @@ class THREE.terraingen.BTT
     @createVertexBuffer geom
     @buildTree @width, @height, geom
     @createIndexBuffer geom
+    @cleanup()
     geom
     
     

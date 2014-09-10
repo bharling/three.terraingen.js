@@ -7,6 +7,7 @@ class THREE.terraingen.Patch
     @meshProvider.setRegion @x, @y, @width, @height
     @object.position.x = @x
     @object.position.z = @y
+    @ready = @building = false
     
   addLOD : (level, distance) ->
     @meshProvider.lod = level
@@ -22,26 +23,27 @@ class THREE.terraingen.Tile
   
   lods: [
     {
-      level:0.005, distance:500
+      level:0.005, distance:200
     },
     {
-      level:0.02, distance: 1500
+      level:0.02, distance: 400
     },
     {
-      level:0.08, distance: 2500
+      level:0.06, distance: 800
     }
   ]
   constructor: (@x=0, @y=0, @meshProvider) ->
     @queue = []
     @patches = []
     @object = new THREE.Object3D()
+    @ready = false
     # create blank patches
     for i in [0 ... 16] by 1
       for j in [0 ... 16] by 1
-        patch = new THREE.terraingen.Patch( i*32, j*32, 33, 33, @meshProvider )
+        patch = new THREE.terraingen.Patch( @x+(i*32), @y+(j*32), 33, 33, @meshProvider, @ )
         @queue.push patch
-  
-  update: (camera) ->
+        
+  build: () ->
     if !@ready
       if @queue.length
         next = @queue.pop()
@@ -51,14 +53,97 @@ class THREE.terraingen.Tile
         @object.add next.get()
       else
         @ready = true
+        
+  buildPatch: (patch) ->
+    for lod in @lods
+      patch.addLOD lod.level, lod.distance
+    patch.ready = true
+    @object.add patch.get()
+    
+  addCompletedPatch:(patch) ->
+    @patches.push patch
+    @object.add patch.object
+    
+        
+  
+  update: (camera, frustum) ->
+    
+    if !@ready
+      to_build = []
+      
+      not_to_build = []
+      
+      for p in @queue
+        contains = frustum.containsPoint(p.object.position)
+        if contains
+          to_build.push p
+        else
+          not_to_build.push p
+      @queue = not_to_build
+      if @queue.length == 0
+        @ready = true
+        
+    
+    
+    
     for p in @patches
-      p.object.update(camera)
+      contains = frustum.containsPoint(p.object.position)
+      if contains
+          p.object.update(camera)
+      p.object.visible = contains
+      
+    return to_build
+
+      
   get: () ->
     return @object
       
       
-      
+
+class THREE.terraingen.TileManager
+  lods: [
+    {
+      level:0.002, distance:200
+    },
+    {
+      level:0.02, distance: 600
+    },
+    {
+      level:0.04, distance: 1200
+    }
+  ]
+  
+  constructor: (@meshProvider, @scene) ->
+    @tiles = []
+    @queue = []
+    @currentTile = null
+    @frustum = new THREE.Frustum()
+    
+    # build empty tiles into the queue
+    for i in [-2 ... 2]
+      for j in [-2 ... 2]
+        tile = new THREE.terraingen.Tile i*512, j*512, @meshProvider
+        obj = tile.get()
+        obj.scale.y = 100
+        @scene.add obj
+        @tiles.push tile
         
+        
+  buildPatch: (patch) ->
+    for lod in @lods
+      patch.addLOD lod.level, lod.distance
+    patch.parent.addCompletedPatch( patch )
+    
+  
+  update: (camera) ->
+    if @queue.length
+      #@queue = @queue.sort (item) -> return item.object.position.distanceToSquared( camera.position )
+      @buildPatch @queue.pop()
+    @frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ))
+    for tile in @tiles
+      @queue = @queue.concat tile.update camera, @frustum
+    return
+    
     
   
     
@@ -93,11 +178,6 @@ class QuadTreeNode
         for node in @children
           if node.contains object
             node.add object
-    
-      
-    
-
-class THREE.terraingen.PatchManager
   
     
     

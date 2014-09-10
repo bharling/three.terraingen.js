@@ -1,22 +1,21 @@
-var container, camera, scene, renderer, output, mesh, tile, controls;
+var container, camera, scene, renderer, output, mesh, tile, controls, tileManager;
 
 (function(THREE){
 	RNG = THREE.terraingen.MersenneTwisterProvider;
 	
 	Perlin = THREE.terraingen.generators.Perlin, Max = THREE.terraingen.modifiers.Max, Constant = THREE.terraingen.modifiers.Constant;
 	
-	Min = THREE.terraingen.modifiers.Min;
+	Min = THREE.terraingen.modifiers.Min, Invert = THREE.terraingen.modifiers.Invert;
 	
 	var Abs = THREE.terraingen.modifiers.Abs, Convert = THREE.terraingen.modifiers.ConvertToUnsigned;
 	
 	var source = new Convert(
-		new Max(
+		new Invert(
 			new Abs(
 				new Perlin(
-					new RNG(48327432).random, 12, 0.004
+					new RNG(543).random, 8, 0.002
 				) 
 			)
-			,new Constant(0.2)
 		)
 
     );
@@ -73,11 +72,11 @@ var container, camera, scene, renderer, output, mesh, tile, controls;
 	geomProvider.source = output;
 	
 	// choose some origin in noise space
-	var x = 500;
-	var y = 40;
+	var x = -256;
+	var y = -256;
 	
 	// plug in a mesh provider
-	var meshProvider = new THREE.terraingen.MeshProvider(x, y);
+	var meshProvider = new THREE.terraingen.MeshProvider();
 	meshProvider.geometryProvider = geomProvider;	
 	
 	
@@ -87,26 +86,11 @@ var container, camera, scene, renderer, output, mesh, tile, controls;
 	
 	bootstrap();
 
-	//var mesh = meshProvider.get();	
-	//mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
-	//mesh.scale.y = 300;
 	
 	
-	tile = new THREE.terraingen.Tile(x,y,meshProvider);
+	tileManager = new THREE.terraingen.TileManager(meshProvider, scene);
 	
-	mesh = tile.get()
-	
-	mesh.scale.x = mesh.scale.y = mesh.scale.z = 4;
-	mesh.scale.y = 300;
-	
-	
-	mesh.position.x -= (256*2)
-	
-	
-	scene.add(mesh);
-	
-	//mesh.rotation.x = 4
-	//drawHeightMap( hmGen, x, y );
+
 	
 	
 	window.toggleWireframe = function () {
@@ -140,10 +124,12 @@ var container, camera, scene, renderer, output, mesh, tile, controls;
  	
  	
  	function bootstrap () {
- 		container = document.getElementById('container');
+ 		
  		
  		camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
- 		camera.position.z = 500;
+ 		camera.position.z = 500
+ 		camera.position.y = 200
+ 		camera.lookAt(new THREE.Vector3(0,0,0))
  		
  		scene = new THREE.Scene();
  		
@@ -153,7 +139,7 @@ var container, camera, scene, renderer, output, mesh, tile, controls;
  		
  		renderer.setSize( window.innerWidth, window.innerHeight );
  		
- 		container.appendChild(renderer.domElement);
+ 		document.body.appendChild(renderer.domElement);
  		
  		controls = new THREE.OrbitControls(camera);
  		//controls.addEventListener('change', render);
@@ -164,7 +150,7 @@ var container, camera, scene, renderer, output, mesh, tile, controls;
  	function animate () {
  		requestAnimationFrame(animate);
  		controls.update();
- 		tile.update(camera);
+ 		tileManager.update(camera);
  		render();
  	}
 	

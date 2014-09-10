@@ -56,15 +56,11 @@
   })(THREE.terraingen.GeometryProvider);
 
   THREE.terraingen.BTT = (function() {
-    BTT.prototype.tree = [];
-
     BTT.prototype.maxVariance = 0.02;
 
     BTT.prototype.squareUnits = 1;
 
     BTT.prototype.heightScale = 1;
-
-    BTT.prototype.heightCache = [];
 
     function BTT(x, y, width, height, heightMapProvider, maxVariance) {
       this.x = x;
@@ -73,7 +69,12 @@
       this.height = height;
       this.heightMapProvider = heightMapProvider;
       this.maxVariance = maxVariance;
+      this.tree = [];
     }
+
+    BTT.prototype.cleanup = function() {
+      return this.tree = [];
+    };
 
     BTT.prototype.build = function() {
       var geom;
@@ -82,6 +83,7 @@
       this.createVertexBuffer(geom);
       this.buildTree(this.width, this.height, geom);
       this.createIndexBuffer(geom);
+      this.cleanup();
       return geom;
     };
 

@@ -20,8 +20,10 @@ class THREE.terraingen.MeshProvider
     geom = @geometryProvider.get(@lod)
     geom.computeFaceNormals()
     geom.computeVertexNormals(true)
+    geom = new THREE.BufferGeometry().fromGeometry(geom)
     material = new THREE.MeshNormalMaterial({shading:THREE.SmoothShading, wireframe:true})
     mesh = new THREE.Mesh(geom, material)
+    #geom.dispose()
     
   get: () ->
     @build()
