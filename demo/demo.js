@@ -5,20 +5,30 @@ var container, camera, scene, renderer, output, mesh, tile, controls, tileManage
 	
 	Perlin = THREE.terraingen.generators.Perlin, Max = THREE.terraingen.modifiers.Max, Constant = THREE.terraingen.modifiers.Constant;
 	
-	Min = THREE.terraingen.modifiers.Min, Invert = THREE.terraingen.modifiers.Invert;
+	Min = THREE.terraingen.modifiers.Min, Invert = THREE.terraingen.modifiers.Invert, Mix = THREE.terraingen.modifiers.Mix;
 	
 	var Abs = THREE.terraingen.modifiers.Abs, Convert = THREE.terraingen.modifiers.ConvertToUnsigned;
 	
-	var source = new Convert(
-		new Invert(
-			new Abs(
-				new Perlin(
-					new RNG(543).random, 8, 0.002
-				) 
+	var source = //new Convert(
+		new Mix (
+			new Invert(
+				new Abs(
+					new Perlin(
+						new RNG(543).random, 8, 0.002
+					) 
+				)
+			),
+			
+			new Perlin(
+				new RNG(3234).random, 4, 0.0002
+			),
+			
+			new Perlin(
+				new RNG(19029).random, 4, 0.0004
 			)
 		)
 
-    );
+    //);
 	
 	output = new THREE.terraingen.modifiers.Cache( source );
 	

@@ -106,7 +106,7 @@ class THREE.terraingen.TileManager
       level:0.002, distance:200
     },
     {
-      level:0.02, distance: 600
+      level:0.007, distance: 600
     },
     {
       level:0.04, distance: 1200
