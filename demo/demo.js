@@ -138,7 +138,7 @@ var container, camera, scene, renderer, output, mesh, tile, controls, tileManage
  		
  		camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
  		camera.position.z = 500
- 		camera.position.y = 200
+ 		camera.position.y = 100
  		camera.lookAt(new THREE.Vector3(0,0,0))
  		
  		scene = new THREE.Scene();

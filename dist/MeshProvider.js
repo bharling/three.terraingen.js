@@ -32,6 +32,7 @@
       geom = this.geometryProvider.get(this.lod);
       geom.computeFaceNormals();
       geom.computeVertexNormals(true);
+      geom.mergeVertices();
       geom = new THREE.BufferGeometry().fromGeometry(geom);
       material = new THREE.MeshNormalMaterial({
         shading: THREE.SmoothShading,

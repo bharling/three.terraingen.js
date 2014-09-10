@@ -25,7 +25,34 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
     #@btt.createVertexBuffer()
     #@btt.buildTree @width, @height
     #@btt.createIndexBuffer()
-    btt.build()
+    @createSkirts btt.build()
+    
+    
+  createSkirts: (geom) ->
+    console.log geom.faces.length, geom.faceVertexUvs[0].length
+    for f in [0 ... geom.faces.length] by 1
+      
+      edgeVerts = []
+      uvs = geom.faceVertexUvs[0][f]
+      uva = uvs[0]
+      uvb = uvs[1]
+      uvc = uvs[2]
+      face = geom.faces[f]
+      
+      if uva.x == 0 or uva.x == 1 or uva.y == 0 or uva.y == 1
+        edgeVerts.push geom.vertices[face.a]
+      if uvb.x == 0 or uvb.x == 1 or uvb.y == 0 or uvb.y == 1
+        edgeVerts.push geom.vertices[face.b]
+      if uvc.x == 0 or uvc.x == 1 or uvc.y == 0 or uvc.y == 1
+        edgeVerts.push geom.vertices[face.c]
+      if edgeVerts.length == 2
+        edgeVerts[0].y -= 200
+        edgeVerts[1].y -= 200
+    geom
+      
+        
+    
+  
     
     
 # This code ported from the Director example by Patrick Murris
@@ -65,6 +92,7 @@ class THREE.terraingen.BTT
         alt = (@heightMapProvider.get @x+i, @y+j) * @heightScale
         geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
         
+        
   createIndexBuffer: (geom) ->
     for i in [0 ... @tree.length] by 1
       if not @tree[i].lc?
@@ -72,6 +100,12 @@ class THREE.terraingen.BTT
         v2 = @tree[i].v2
         v3 = @tree[i].v3
         geom.faces.push new THREE.Face3 v1, v2, v3
+        
+        uva = new THREE.Vector2 v1.x/@width, v1.z/@height
+        uvb = new THREE.Vector2 v2.x/@width, v2.z/@height
+        uvc = new THREE.Vector2 v3.x/@width, v3.z/@height
+        
+        geom.faceVertexUvs[0].push([uva, uvb, uvc])
         
   getSeriazlized: () ->
     result = ""

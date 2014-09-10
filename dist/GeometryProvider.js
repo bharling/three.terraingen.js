@@ -48,7 +48,34 @@
         maxVariance = 0.05;
       }
       btt = new THREE.terraingen.BTT(this.x, this.y, this.width, this.height, this.source, maxVariance);
-      return btt.build();
+      return this.createSkirts(btt.build());
+    };
+
+    BTTGeometryProvider.prototype.createSkirts = function(geom) {
+      var edgeVerts, f, face, uva, uvb, uvc, uvs, _i, _ref;
+      console.log(geom.faces.length, geom.faceVertexUvs[0].length);
+      for (f = _i = 0, _ref = geom.faces.length; _i < _ref; f = _i += 1) {
+        edgeVerts = [];
+        uvs = geom.faceVertexUvs[0][f];
+        uva = uvs[0];
+        uvb = uvs[1];
+        uvc = uvs[2];
+        face = geom.faces[f];
+        if (uva.x === 0 || uva.x === 1 || uva.y === 0 || uva.y === 1) {
+          edgeVerts.push(geom.vertices[face.a]);
+        }
+        if (uvb.x === 0 || uvb.x === 1 || uvb.y === 0 || uvb.y === 1) {
+          edgeVerts.push(geom.vertices[face.b]);
+        }
+        if (uvc.x === 0 || uvc.x === 1 || uvc.y === 0 || uvc.y === 1) {
+          edgeVerts.push(geom.vertices[face.c]);
+        }
+        if (edgeVerts.length === 2) {
+          edgeVerts[0].y -= 200;
+          edgeVerts[1].y -= 200;
+        }
+      }
+      return geom;
     };
 
     return BTTGeometryProvider;
@@ -105,14 +132,18 @@
     };
 
     BTT.prototype.createIndexBuffer = function(geom) {
-      var i, v1, v2, v3, _i, _ref, _results;
+      var i, uva, uvb, uvc, v1, v2, v3, _i, _ref, _results;
       _results = [];
       for (i = _i = 0, _ref = this.tree.length; _i < _ref; i = _i += 1) {
         if (this.tree[i].lc == null) {
           v1 = this.tree[i].v1;
           v2 = this.tree[i].v2;
           v3 = this.tree[i].v3;
-          _results.push(geom.faces.push(new THREE.Face3(v1, v2, v3)));
+          geom.faces.push(new THREE.Face3(v1, v2, v3));
+          uva = new THREE.Vector2(v1.x / this.width, v1.z / this.height);
+          uvb = new THREE.Vector2(v2.x / this.width, v2.z / this.height);
+          uvc = new THREE.Vector2(v3.x / this.width, v3.z / this.height);
+          _results.push(geom.faceVertexUvs[0].push([uva, uvb, uvc]));
         } else {
           _results.push(void 0);
         }
