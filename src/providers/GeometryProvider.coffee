@@ -87,7 +87,7 @@ class THREE.terraingen.BTT
   createVertexBuffer: (geom) ->
     for i in [0 ... @width] by 1
       for j in [0 ... @height] by 1
-        alt = (@heightMapProvider.get @x+i, @y+j) * @heightScale
+        alt = (@heightMapProvider.get @x+(i*@squareUnits), @y+(j*@squareUnits)) * @heightScale
         geom.vertices.push new THREE.Vector3 i*@squareUnits, alt, j*@squareUnits
         
         

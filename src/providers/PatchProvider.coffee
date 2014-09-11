@@ -191,6 +191,7 @@ class THREE.terraingen.TileManager
     @currentTile = null
     @frustum = new THREE.Frustum()
     @cameraRect = []
+    @lastQueueLength = 0
     
     # build empty tiles into the queue
     for i in [-2 ... 2]
@@ -210,9 +211,10 @@ class THREE.terraingen.TileManager
   
   update: (camera) ->
     @cameraRect = calculateCameraRect(camera)
-    console.log @cameraRect
     if @queue.length
-      #@queue = @queue.sort (a,b) -> return a.distance < b.distance
+      if Math.abs( @queue.length - @lastQueueLength ) > 20
+        @lastQueueLength = @queue.length
+        @queue = @queue.sort (a,b) -> return a.distance < b.distance
       @buildPatch @queue.pop()
     @frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ))
     for tile in @tiles

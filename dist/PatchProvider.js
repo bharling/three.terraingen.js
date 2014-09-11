@@ -222,6 +222,7 @@
       this.currentTile = null;
       this.frustum = new THREE.Frustum();
       this.cameraRect = [];
+      this.lastQueueLength = 0;
       for (i = _i = -2; _i < 2; i = ++_i) {
         for (j = _j = -2; _j < 2; j = ++_j) {
           tile = new THREE.terraingen.Tile(i * 512, j * 512, this.meshProvider);
@@ -246,8 +247,13 @@
     TileManager.prototype.update = function(camera) {
       var b, tile, to_build, _i, _j, _len, _len1, _ref;
       this.cameraRect = calculateCameraRect(camera);
-      console.log(this.cameraRect);
       if (this.queue.length) {
+        if (Math.abs(this.queue.length - this.lastQueueLength) > 20) {
+          this.lastQueueLength = this.queue.length;
+          this.queue = this.queue.sort(function(a, b) {
+            return a.distance < b.distance;
+          });
+        }
         this.buildPatch(this.queue.pop());
       }
       this.frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
