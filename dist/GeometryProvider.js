@@ -133,8 +133,8 @@
 
     BTT.prototype.createIndexBuffer = function(geom) {
       var h, i, uva, uvb, uvc, v1, v2, v3, w, _i, _ref, _v1, _v2, _v3;
-      w = this.width * this.squareUnits;
-      h = this.height * this.squareUnits;
+      w = (this.width - 1) * this.squareUnits;
+      h = (this.height - 1) * this.squareUnits;
       for (i = _i = 0, _ref = this.tree.length; _i < _ref; i = _i += 1) {
         if (this.tree[i].lc == null) {
           v1 = this.tree[i].v1;

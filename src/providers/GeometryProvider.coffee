@@ -94,8 +94,8 @@ class THREE.terraingen.BTT
         
         
   createIndexBuffer: (geom) ->
-    w = @width*@squareUnits
-    h = @height*@squareUnits
+    w = (@width-1)*@squareUnits
+    h = (@height-1)*@squareUnits
     for i in [0 ... @tree.length] by 1
       if not @tree[i].lc?
         v1 = @tree[i].v1
