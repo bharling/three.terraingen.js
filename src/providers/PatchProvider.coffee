@@ -1,3 +1,73 @@
+getCameraTarget = (camera) ->
+  l = new THREE.Vector3 0,0,-100
+  camera.updateMatrixWorld()
+  l.applyMatrix4 camera.matrixWorld
+  return l
+    
+calculateCameraRect = (camera) ->
+  hNear = 2 * Math.tan(camera.fov / 2) * camera.near
+  wNear = hNear * camera.aspect
+  
+  hFar = 2 * Math.tan(camera.fov / 2) * camera.far
+  wFar = hFar * camera.aspect
+  
+  p = camera.position.clone()
+  l = getCameraTarget camera
+  u = new THREE.Vector3 0.0,1.0,0.0
+  
+  d = new THREE.Vector3()
+  d.subVectors(l, p)
+  d.normalize()
+  
+  r = new THREE.Vector3()
+  r.crossVectors(u, d)
+  r.normalize()
+  
+  dTmp = d.clone()
+  nc = new THREE.Vector3()
+  nc.addVectors(p, dTmp.multiplyScalar(camera.near))
+  
+  uTmp = u.clone()
+  rTmp = r.clone()
+  ntr = new THREE.Vector3()
+  
+  ntr.addVectors(nc, uTmp.multiplyScalar(hNear / 2))
+  ntr.sub(rTmp.multiplyScalar(wNear / 2))
+  
+  uTmp.copy(u)
+  rTmp.copy(r)
+  
+  ntl = new THREE.Vector3()
+  
+  ntl.addVectors(nc, uTmp.multiplyScalar(hNear / 2))
+  ntl.add( rTmp.multiplyScalar(wNear / 2))
+  
+  dTmp.copy(d)
+  fc = new THREE.Vector3()
+  fc.addVectors(p, dTmp.multiplyScalar(camera.far))
+  
+  uTmp.copy(u)
+  rTmp.copy(r)
+  ftr = new THREE.Vector3()
+  ftr.addVectors(fc, uTmp.multiplyScalar(hFar / 2))
+  ftr.sub(rTmp.multiplyScalar(wFar / 2))
+
+  uTmp.copy(u)
+  rTmp.copy(r)
+  ftl = new THREE.Vector3()
+  ftl.addVectors(fc, uTmp.multiplyScalar(hFar / 2))
+  ftl.add(rTmp.multiplyScalar(wFar / 2));
+  
+  
+  minX = Math.min ntr.x, ntl.x, ftr.x, ftl.x
+  minY = Math.min ntr.z, ntl.z, ftr.z, ftl.z
+  
+  maxX = Math.max ntr.x, ntl.x, ftr.x, ftl.x
+  maxY = Math.max ntr.z, ntl.z, ftr.z, ftl.z
+  
+  return [minX, minY, maxX, maxY]
+
+
 class THREE.terraingen.Patch
   parent:null
   
@@ -38,6 +108,7 @@ class THREE.terraingen.Tile
     @patches = []
     @object = new THREE.Object3D()
     @ready = false
+    @doLOD = true
     # create blank patches
     for i in [0 ... 16] by 1
       for j in [0 ... 16] by 1
@@ -86,12 +157,12 @@ class THREE.terraingen.Tile
         
     
     
-    
-    for p in @patches
-      contains = frustum.containsPoint(p.object.position)
-      if contains
-          p.object.update(camera)
-      p.object.visible = contains
+    if @doLOD
+      for p in @patches
+        contains = frustum.containsPoint(p.object.position)
+        if contains
+            p.object.update(camera)
+        p.object.visible = contains
       
     return to_build
 
@@ -119,6 +190,7 @@ class THREE.terraingen.TileManager
     @queue = []
     @currentTile = null
     @frustum = new THREE.Frustum()
+    @cameraRect = []
     
     # build empty tiles into the queue
     for i in [-2 ... 2]
@@ -137,8 +209,10 @@ class THREE.terraingen.TileManager
     
   
   update: (camera) ->
+    @cameraRect = calculateCameraRect(camera)
+    console.log @cameraRect
     if @queue.length
-      @queue = @queue.sort (a,b) -> return a.distance < b.distance
+      #@queue = @queue.sort (a,b) -> return a.distance < b.distance
       @buildPatch @queue.pop()
     @frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ))
     for tile in @tiles
@@ -149,6 +223,10 @@ class THREE.terraingen.TileManager
     return
     
     
+
+  
+  
+  
   
     
     

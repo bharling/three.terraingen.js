@@ -1,5 +1,61 @@
 (function() {
-  var QuadTreeNode;
+  var QuadTreeNode, calculateCameraRect, getCameraTarget;
+
+  getCameraTarget = function(camera) {
+    var l;
+    l = new THREE.Vector3(0, 0, -100);
+    camera.updateMatrixWorld();
+    l.applyMatrix4(camera.matrixWorld);
+    return l;
+  };
+
+  calculateCameraRect = function(camera) {
+    var d, dTmp, fc, ftl, ftr, hFar, hNear, l, maxX, maxY, minX, minY, nc, ntl, ntr, p, r, rTmp, u, uTmp, wFar, wNear;
+    hNear = 2 * Math.tan(camera.fov / 2) * camera.near;
+    wNear = hNear * camera.aspect;
+    hFar = 2 * Math.tan(camera.fov / 2) * camera.far;
+    wFar = hFar * camera.aspect;
+    p = camera.position.clone();
+    l = getCameraTarget(camera);
+    u = new THREE.Vector3(0.0, 1.0, 0.0);
+    d = new THREE.Vector3();
+    d.subVectors(l, p);
+    d.normalize();
+    r = new THREE.Vector3();
+    r.crossVectors(u, d);
+    r.normalize();
+    dTmp = d.clone();
+    nc = new THREE.Vector3();
+    nc.addVectors(p, dTmp.multiplyScalar(camera.near));
+    uTmp = u.clone();
+    rTmp = r.clone();
+    ntr = new THREE.Vector3();
+    ntr.addVectors(nc, uTmp.multiplyScalar(hNear / 2));
+    ntr.sub(rTmp.multiplyScalar(wNear / 2));
+    uTmp.copy(u);
+    rTmp.copy(r);
+    ntl = new THREE.Vector3();
+    ntl.addVectors(nc, uTmp.multiplyScalar(hNear / 2));
+    ntl.add(rTmp.multiplyScalar(wNear / 2));
+    dTmp.copy(d);
+    fc = new THREE.Vector3();
+    fc.addVectors(p, dTmp.multiplyScalar(camera.far));
+    uTmp.copy(u);
+    rTmp.copy(r);
+    ftr = new THREE.Vector3();
+    ftr.addVectors(fc, uTmp.multiplyScalar(hFar / 2));
+    ftr.sub(rTmp.multiplyScalar(wFar / 2));
+    uTmp.copy(u);
+    rTmp.copy(r);
+    ftl = new THREE.Vector3();
+    ftl.addVectors(fc, uTmp.multiplyScalar(hFar / 2));
+    ftl.add(rTmp.multiplyScalar(wFar / 2));
+    minX = Math.min(ntr.x, ntl.x, ftr.x, ftl.x);
+    minY = Math.min(ntr.z, ntl.z, ftr.z, ftl.z);
+    maxX = Math.max(ntr.x, ntl.x, ftr.x, ftl.x);
+    maxY = Math.max(ntr.z, ntl.z, ftr.z, ftl.z);
+    return [minX, minY, maxX, maxY];
+  };
 
   THREE.terraingen.Patch = (function() {
     Patch.prototype.parent = null;
@@ -58,6 +114,7 @@
       this.patches = [];
       this.object = new THREE.Object3D();
       this.ready = false;
+      this.doLOD = true;
       for (i = _i = 0; _i < 16; i = _i += 1) {
         for (j = _j = 0; _j < 16; j = _j += 1) {
           patch = new THREE.terraingen.Patch(this.x + (i * 32), this.y + (j * 32), 33, 33, this.meshProvider, this);
@@ -120,14 +177,16 @@
           this.ready = true;
         }
       }
-      _ref1 = this.patches;
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        p = _ref1[_j];
-        contains = frustum.containsPoint(p.object.position);
-        if (contains) {
-          p.object.update(camera);
+      if (this.doLOD) {
+        _ref1 = this.patches;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          p = _ref1[_j];
+          contains = frustum.containsPoint(p.object.position);
+          if (contains) {
+            p.object.update(camera);
+          }
+          p.object.visible = contains;
         }
-        p.object.visible = contains;
       }
       return to_build;
     };
@@ -162,6 +221,7 @@
       this.queue = [];
       this.currentTile = null;
       this.frustum = new THREE.Frustum();
+      this.cameraRect = [];
       for (i = _i = -2; _i < 2; i = ++_i) {
         for (j = _j = -2; _j < 2; j = ++_j) {
           tile = new THREE.terraingen.Tile(i * 512, j * 512, this.meshProvider);
@@ -185,10 +245,9 @@
 
     TileManager.prototype.update = function(camera) {
       var b, tile, to_build, _i, _j, _len, _len1, _ref;
+      this.cameraRect = calculateCameraRect(camera);
+      console.log(this.cameraRect);
       if (this.queue.length) {
-        this.queue = this.queue.sort(function(a, b) {
-          return a.distance < b.distance;
-        });
         this.buildPatch(this.queue.pop());
       }
       this.frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));

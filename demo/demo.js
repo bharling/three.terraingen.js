@@ -156,6 +156,12 @@ var container, camera, scene, renderer, output, mesh, tile, controls, tileManage
  		
  	}
  	
+ 	window.toggleLOD = function () {
+ 		for (var i=0; i<tileManager.tiles.length; i++) {
+ 			tileManager.tiles[i].doLOD = !tileManager.tiles[i].doLOD;
+ 		}
+ 	}
+ 	
  	
  	function animate () {
  		requestAnimationFrame(animate);

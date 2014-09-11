@@ -15,7 +15,6 @@ class THREE.terraingen.GeometryProvider
     new THREE.BufferGeometry
     
     
-    
 class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProvider
   constructor:(@x=0, @y=0, @width=257, @height=257) ->
     
