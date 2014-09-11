@@ -14,7 +14,7 @@ var container, camera, scene, renderer, output, mesh, tile, controls, tileManage
 			new Invert(
 				new Abs(
 					new Perlin(
-						new RNG(543).random, 8, 0.002
+						new RNG(6543654).random, 12, 0.0008
 					) 
 				)
 			),

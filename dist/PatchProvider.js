@@ -16,6 +16,7 @@
       this.object.position.x = this.x;
       this.object.position.z = this.y;
       this.ready = this.building = false;
+      this.distance = Infinity;
     }
 
     Patch.prototype.addLOD = function(level, distance) {
@@ -101,8 +102,8 @@
 
     Tile.prototype.update = function(camera, frustum) {
       var contains, not_to_build, p, to_build, _i, _j, _len, _len1, _ref, _ref1;
+      to_build = [];
       if (!this.ready) {
-        to_build = [];
         not_to_build = [];
         _ref = this.queue;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -165,7 +166,7 @@
         for (j = _j = -2; _j < 2; j = ++_j) {
           tile = new THREE.terraingen.Tile(i * 512, j * 512, this.meshProvider);
           obj = tile.get();
-          obj.scale.y = 100;
+          obj.scale.y = 150;
           this.scene.add(obj);
           this.tiles.push(tile);
         }
@@ -183,15 +184,23 @@
     };
 
     TileManager.prototype.update = function(camera) {
-      var tile, _i, _len, _ref;
+      var b, tile, to_build, _i, _j, _len, _len1, _ref;
       if (this.queue.length) {
+        this.queue = this.queue.sort(function(a, b) {
+          return a.distance < b.distance;
+        });
         this.buildPatch(this.queue.pop());
       }
       this.frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
       _ref = this.tiles;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         tile = _ref[_i];
-        this.queue = this.queue.concat(tile.update(camera, this.frustum));
+        to_build = tile.update(camera, this.frustum);
+        for (_j = 0, _len1 = to_build.length; _j < _len1; _j++) {
+          b = to_build[_j];
+          b.distance = camera.position.distanceToSquared(b.object.position);
+          this.queue.push(b);
+        }
       }
     };
 

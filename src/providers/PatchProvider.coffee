@@ -8,6 +8,7 @@ class THREE.terraingen.Patch
     @object.position.x = @x
     @object.position.z = @y
     @ready = @building = false
+    @distance = Infinity
     
   addLOD : (level, distance) ->
     @meshProvider.lod = level
@@ -67,9 +68,9 @@ class THREE.terraingen.Tile
         
   
   update: (camera, frustum) ->
-    
+    to_build = []
     if !@ready
-      to_build = []
+      
       
       not_to_build = []
       
@@ -124,7 +125,7 @@ class THREE.terraingen.TileManager
       for j in [-2 ... 2]
         tile = new THREE.terraingen.Tile i*512, j*512, @meshProvider
         obj = tile.get()
-        obj.scale.y = 100
+        obj.scale.y = 150
         @scene.add obj
         @tiles.push tile
         
@@ -137,11 +138,14 @@ class THREE.terraingen.TileManager
   
   update: (camera) ->
     if @queue.length
-      #@queue = @queue.sort (item) -> return item.object.position.distanceToSquared( camera.position )
+      @queue = @queue.sort (a,b) -> return a.distance < b.distance
       @buildPatch @queue.pop()
     @frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ))
     for tile in @tiles
-      @queue = @queue.concat tile.update camera, @frustum
+      to_build = tile.update camera, @frustum
+      for b in to_build
+        b.distance = camera.position.distanceToSquared b.object.position
+        @queue.push b
     return
     
     

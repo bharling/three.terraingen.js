@@ -29,7 +29,6 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
     
     
   createSkirts: (geom) ->
-    console.log geom.faces.length, geom.faceVertexUvs[0].length
     for f in [0 ... geom.faces.length] by 1
       
       edgeVerts = []
@@ -45,9 +44,9 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
         edgeVerts.push geom.vertices[face.b]
       if uvc.x == 0 or uvc.x == 1 or uvc.y == 0 or uvc.y == 1
         edgeVerts.push geom.vertices[face.c]
-      if edgeVerts.length == 2
-        edgeVerts[0].y -= 0.02
-        edgeVerts[1].y -= 0.02
+      #if edgeVerts.length == 2
+      #  edgeVerts[0].y -= 0.02
+      #  edgeVerts[1].y -= 0.02
     geom
       
         

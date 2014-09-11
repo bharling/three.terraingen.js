@@ -53,7 +53,6 @@
 
     BTTGeometryProvider.prototype.createSkirts = function(geom) {
       var edgeVerts, f, face, uva, uvb, uvc, uvs, _i, _ref;
-      console.log(geom.faces.length, geom.faceVertexUvs[0].length);
       for (f = _i = 0, _ref = geom.faces.length; _i < _ref; f = _i += 1) {
         edgeVerts = [];
         uvs = geom.faceVertexUvs[0][f];
@@ -69,10 +68,6 @@
         }
         if (uvc.x === 0 || uvc.x === 1 || uvc.y === 0 || uvc.y === 1) {
           edgeVerts.push(geom.vertices[face.c]);
-        }
-        if (edgeVerts.length === 2) {
-          edgeVerts[0].y -= 0.02;
-          edgeVerts[1].y -= 0.02;
         }
       }
       return geom;
