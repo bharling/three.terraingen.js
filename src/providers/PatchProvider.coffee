@@ -66,6 +66,91 @@ calculateCameraRect = (camera) ->
   maxY = Math.max ntr.z, ntl.z, ftr.z, ftl.z
   
   return [minX, minY, maxX, maxY]
+  
+NW = 0
+NE = 1
+SW = 2
+SE = 3
+  
+class THREE.terraingen.Chunk
+  constructor: (@bounds, @meshProvider, @scene,  @lod=1) ->
+    @object = null
+    @children = [null, null, null, null]
+    @ready = false
+    
+  build: () ->
+    if !@ready
+      @meshProvider.setLOD @lod
+      @meshProvider.setBounds @bounds
+      @object = @meshProvider.get()
+      @scene.add @object
+      @ready = true
+    @object.position.x -= @bounds.hs
+    @object.position.z += @bounds.hs
+    return @object
+    
+  split: () ->
+    qw = @bounds.hs / 2.0
+    nextLod = @lod / 2.0
+    
+    # NW
+    nw = new THREE.Vector2 @bounds.c.x - qw, @bounds.c.y - qw
+    nwbox = new THREE.terraingen.AABB( nw, qw )
+    @children[NW] = new THREE.terraingen.Chunk( nwbox, @meshProvider, @scene, nextLod  )
+    
+    #NE
+    ne = new THREE.Vector2 @bounds.c.x + qw, @bounds.c.y - qw
+    nebox = new THREE.terraingen.AABB( ne, qw )
+    @children[NE] = new THREE.terraingen.Chunk( nebox, @meshProvider, @scene, nextLod  )
+    
+    #SW
+    sw = new THREE.Vector2 @bounds.c.x - qw, @bounds.c.y + qw
+    swbox = new THREE.terraingen.AABB( sw, qw )
+    @children[SW] = new THREE.terraingen.Chunk( swbox, @meshProvider, @scene, nextLod  )
+    
+    #SE
+    se = new THREE.Vector2 @bounds.c.x + qw, @bounds.c.y + qw
+    sebox = new THREE.terraingen.AABB( se, qw )
+    @children[SE] = new THREE.terraingen.Chunk( sebox, @meshProvider, @scene, nextLod  )
+    
+    return
+    
+  calculateRho : (camera, K) ->
+    pos = new THREE.Vector2 camera.position.x, camera.position.z
+    D = pos.distanceTo @bounds.c
+    #D -= @bounds.hs
+    rho = @lod / D * K
+    return rho
+    
+  get: () ->
+    if not @ready
+      @build()
+    @object
+    
+  draw: (camera, K) ->
+    tau = 1
+    if @children[0] != null
+      for c in @children
+        c.object.visible = false
+    if @calculateRho( camera, K) <= tau
+      if not @ready
+        @build()
+      @object.visible = true
+    else
+      if @object != null
+        @object.visible = false
+      if @children[0] == null
+        @split()
+      for c in @children
+        c.draw camera, K
+    
+    
+        
+    
+    
+  
+  
+  
 
 
 class THREE.terraingen.Patch
@@ -140,7 +225,7 @@ class THREE.terraingen.Tile
   
   update: (camera, frustum) ->
     to_build = []
-    if !@ready
+    if @queue.length
       
       
       not_to_build = []
@@ -152,8 +237,6 @@ class THREE.terraingen.Tile
         else
           not_to_build.push p
       @queue = not_to_build
-      if @queue.length == 0
-        @ready = true
         
     
     
@@ -209,12 +292,16 @@ class THREE.terraingen.TileManager
     
   
   update: (camera) ->
+    @frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ))
     @cameraRect = calculateCameraRect(camera)
-    console.log @cameraRect
     if @queue.length
       #@queue = @queue.sort (a,b) -> return a.distance < b.distance
-      @buildPatch @queue.pop()
-    @frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ))
+      patch = @queue.pop()
+      if not @frustum.containsPoint patch.object.position
+        patch.parent.queue.push patch
+      else
+        @buildPatch patch
+    
     for tile in @tiles
       to_build = tile.update camera, @frustum
       for b in to_build

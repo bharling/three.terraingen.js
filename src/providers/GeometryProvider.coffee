@@ -6,7 +6,7 @@ class THREE.terraingen.GeometryProvider
   width:257
   height:257
   
-  constructor:() ->
+  constructor:(@source) ->
     
     
   setRegion: (@x=0, @y=0, @width=257, @height=257) ->
@@ -16,7 +16,8 @@ class THREE.terraingen.GeometryProvider
     
     
 class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProvider
-  constructor:(@x=0, @y=0, @width=257, @height=257) ->
+  constructor:(@source) ->
+    
     
     
   get:(maxVariance=0.05) ->
@@ -25,6 +26,7 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
     #@btt.buildTree @width, @height
     #@btt.createIndexBuffer()
     @createSkirts btt.build()
+    
     
     
   createSkirts: (geom) ->
@@ -47,11 +49,118 @@ class THREE.terraingen.BTTGeometryProvider extends THREE.terraingen.GeometryProv
       #  edgeVerts[0].y -= 0.02
       #  edgeVerts[1].y -= 0.02
     geom
-      
-        
+          
+class THREE.terraingen.AABB
+  constructor: (center, halfSize) ->
+    @c = center
+    @hs = halfSize
+    @computeBounds()
+    
+  computeBounds: () ->
+    xmin = @c.x - @hs
+    ymin = @c.y - @hs
+    xmax = @c.x + @hs
+    ymax = @c.y + @hs
+    @min = new THREE.Vector2( xmin, ymin )
+    @max = new THREE.Vector2( xmax, ymax )
+    @width = @height = @hs * 2
+    return
+    
+  containsPoint: (point) ->
+    if point.x < @min.x or point.x > @max.x or point.y < @min.y or point.y > @max.y
+      return false
+    return true
+    
+  containsAABB: (box) ->
+    if ( @min.x <= box.min.x ) && ( box.max.x <= @max.x ) && ( @min.y <= box.min.y ) && ( box.max.x <= @max.y )
+      return true
+    return false
+    
+  intersects: (box) ->
+    if box.max.x < @min.x or box.min.x > @max.x or box.max.y < @min.y or box.min.y > @max.y
+      return false
+    return true 
     
   
     
+    
+  
+    
+    
+    
+  
+    
+class THREE.terraingen.PlaneGeometryProvider extends THREE.terraingen.GeometryProvider
+  vertsPerSide : 32
+  
+  constructor: (@source) ->
+    @lod = 1.0
+    
+  setBounds: (@bounds) ->
+    
+  setRegion: (x, y, width, height) ->
+    hs = width / 2
+    c = new THREE.Vector2( x + hs, y + hs )
+    @bounds = new THREE.terraingen.AABB( c, hs )
+    
+    
+  setLOD: (@lod) ->
+    
+    
+  build: () ->
+    color = new THREE.Color( 0xffffff )
+    color.setRGB( Math.random(), Math.random(), Math.random() )
+    w1 = @vertsPerSide + 1
+    stride = @bounds.width / @vertsPerSide
+    normal = new THREE.Vector3( 0, 1, 0 )
+    geom = new THREE.Geometry()
+    hw = @bounds.width / 2
+    
+    for i in [0 ... w1] by 1
+      y = (i * stride)
+      for j in [0 ... w1] by 1
+        x = (j * stride)
+        
+        geom.vertices.push new THREE.Vector3( x, 0.0, - y )
+        geom.colors.push color
+        
+    for iz in [0 ... @vertsPerSide] by 1
+      for ix in [0 ... @vertsPerSide] by 1
+        
+        a = ix + w1 * iz
+        b = ix + w1 * ( iz + 1 )
+        c = ( ix + 1 ) + w1 * ( iz + 1 )
+        d = ( ix + 1 ) + w1 * iz
+        
+        
+        face = new THREE.Face3( a, b, d )
+        face.normal.copy normal
+        face.vertexNormals.push normal.clone(), normal.clone(), normal.clone()
+        
+        face.vertexColors.push color, color, color
+        
+        geom.faces.push face
+        
+        face = new THREE.Face3( b, c, d )
+        face.normal.copy normal
+        face.vertexNormals.push normal.clone(), normal.clone(), normal.clone()
+        
+        face.vertexColors.push color, color, color
+        geom.faces.push face
+        
+    console.log geom
+    geom
+        
+        
+    
+    
+  get: () ->
+    return @build()
+        
+    
+    
+    
+
     
 # This code ported from the Director example by Patrick Murris
 # http://patrick.murris.com/articles/btt_3d_terrain.htm

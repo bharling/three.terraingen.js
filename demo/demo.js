@@ -1,4 +1,4 @@
-var container, camera, scene, renderer, output, mesh, tile, controls, tileManager;
+var container, camera, scene, renderer, output, mesh, tile, controls, tileManager, chunk, K;
 
 (function(THREE){
 	RNG = THREE.terraingen.MersenneTwisterProvider;
@@ -78,25 +78,34 @@ var container, camera, scene, renderer, output, mesh, tile, controls, tileManage
 	
 	
 	// plug that into a geometry provider
-	var geomProvider = new THREE.terraingen.BTTGeometryProvider();
-	geomProvider.source = output;
+	var geomProvider = new THREE.terraingen.BTTGeometryProvider(output);
+	
+	//var geomProvider = new THREE.terraingen.PlaneGeometryProvider( output )
+	
+	//geomProvider.source = output;
 	
 	// choose some origin in noise space
-	var x = -256;
-	var y = -256;
+	//var x = -256;
+	//var y = -256;
+	
+	bootstrap();
 	
 	// plug in a mesh provider
-	var meshProvider = new THREE.terraingen.MeshProvider();
+	var meshProvider = new THREE.terraingen.MeshProvider( geomProvider );
 	meshProvider.geometryProvider = geomProvider;	
 	
 	
+	var center = new THREE.Vector2( 0.0, 0.0 );
 	
+	var bounds = new THREE.terraingen.AABB( center, 512 );
 	
+	//chunk = new THREE.terraingen.Chunk( bounds, meshProvider, scene, 1 );
 	
+	K = window.innerWidth / (2 * Math.tan( camera.fov / 2 ))
 	
-	bootstrap();
+	console.log (K);
 
-	
+	//scene.add( chunk.get() );
 	
 	tileManager = new THREE.terraingen.TileManager(meshProvider, scene);
 	
@@ -167,6 +176,7 @@ var container, camera, scene, renderer, output, mesh, tile, controls, tileManage
  		requestAnimationFrame(animate);
  		controls.update();
  		tileManager.update(camera);
+ 		//chunk.draw( camera, K );
  		render();
  	}
 	

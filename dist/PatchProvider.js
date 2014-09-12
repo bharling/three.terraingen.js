@@ -1,5 +1,5 @@
 (function() {
-  var QuadTreeNode, calculateCameraRect, getCameraTarget;
+  var NE, NW, QuadTreeNode, SE, SW, calculateCameraRect, getCameraTarget;
 
   getCameraTarget = function(camera) {
     var l;
@@ -56,6 +56,107 @@
     maxY = Math.max(ntr.z, ntl.z, ftr.z, ftl.z);
     return [minX, minY, maxX, maxY];
   };
+
+  NW = 0;
+
+  NE = 1;
+
+  SW = 2;
+
+  SE = 3;
+
+  THREE.terraingen.Chunk = (function() {
+    function Chunk(bounds, meshProvider, scene, lod) {
+      this.bounds = bounds;
+      this.meshProvider = meshProvider;
+      this.scene = scene;
+      this.lod = lod != null ? lod : 1;
+      this.object = null;
+      this.children = [null, null, null, null];
+      this.ready = false;
+    }
+
+    Chunk.prototype.build = function() {
+      if (!this.ready) {
+        this.meshProvider.setLOD(this.lod);
+        this.meshProvider.setBounds(this.bounds);
+        this.object = this.meshProvider.get();
+        this.scene.add(this.object);
+        this.ready = true;
+      }
+      this.object.position.x -= this.bounds.hs;
+      this.object.position.z += this.bounds.hs;
+      return this.object;
+    };
+
+    Chunk.prototype.split = function() {
+      var ne, nebox, nextLod, nw, nwbox, qw, se, sebox, sw, swbox;
+      qw = this.bounds.hs / 2.0;
+      nextLod = this.lod / 2.0;
+      nw = new THREE.Vector2(this.bounds.c.x - qw, this.bounds.c.y - qw);
+      nwbox = new THREE.terraingen.AABB(nw, qw);
+      this.children[NW] = new THREE.terraingen.Chunk(nwbox, this.meshProvider, this.scene, nextLod);
+      ne = new THREE.Vector2(this.bounds.c.x + qw, this.bounds.c.y - qw);
+      nebox = new THREE.terraingen.AABB(ne, qw);
+      this.children[NE] = new THREE.terraingen.Chunk(nebox, this.meshProvider, this.scene, nextLod);
+      sw = new THREE.Vector2(this.bounds.c.x - qw, this.bounds.c.y + qw);
+      swbox = new THREE.terraingen.AABB(sw, qw);
+      this.children[SW] = new THREE.terraingen.Chunk(swbox, this.meshProvider, this.scene, nextLod);
+      se = new THREE.Vector2(this.bounds.c.x + qw, this.bounds.c.y + qw);
+      sebox = new THREE.terraingen.AABB(se, qw);
+      this.children[SE] = new THREE.terraingen.Chunk(sebox, this.meshProvider, this.scene, nextLod);
+    };
+
+    Chunk.prototype.calculateRho = function(camera, K) {
+      var D, pos, rho;
+      pos = new THREE.Vector2(camera.position.x, camera.position.z);
+      D = pos.distanceTo(this.bounds.c);
+      rho = this.lod / D * K;
+      return rho;
+    };
+
+    Chunk.prototype.get = function() {
+      if (!this.ready) {
+        this.build();
+      }
+      return this.object;
+    };
+
+    Chunk.prototype.draw = function(camera, K) {
+      var c, tau, _i, _j, _len, _len1, _ref, _ref1, _results;
+      tau = 1;
+      if (this.children[0] !== null) {
+        _ref = this.children;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          c = _ref[_i];
+          c.object.visible = false;
+        }
+      }
+      if (this.calculateRho(camera, K) <= tau) {
+        if (!this.ready) {
+          this.build();
+        }
+        return this.object.visible = true;
+      } else {
+        if (this.object !== null) {
+          this.object.visible = false;
+        }
+        if (this.children[0] === null) {
+          this.split();
+        }
+        _ref1 = this.children;
+        _results = [];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          c = _ref1[_j];
+          _results.push(c.draw(camera, K));
+        }
+        return _results;
+      }
+    };
+
+    return Chunk;
+
+  })();
 
   THREE.terraingen.Patch = (function() {
     Patch.prototype.parent = null;
@@ -160,7 +261,7 @@
     Tile.prototype.update = function(camera, frustum) {
       var contains, not_to_build, p, to_build, _i, _j, _len, _len1, _ref, _ref1;
       to_build = [];
-      if (!this.ready) {
+      if (this.queue.length) {
         not_to_build = [];
         _ref = this.queue;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -173,9 +274,6 @@
           }
         }
         this.queue = not_to_build;
-        if (this.queue.length === 0) {
-          this.ready = true;
-        }
       }
       if (this.doLOD) {
         _ref1 = this.patches;
@@ -244,13 +342,17 @@
     };
 
     TileManager.prototype.update = function(camera) {
-      var b, tile, to_build, _i, _j, _len, _len1, _ref;
-      this.cameraRect = calculateCameraRect(camera);
-      console.log(this.cameraRect);
-      if (this.queue.length) {
-        this.buildPatch(this.queue.pop());
-      }
+      var b, patch, tile, to_build, _i, _j, _len, _len1, _ref;
       this.frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+      this.cameraRect = calculateCameraRect(camera);
+      if (this.queue.length) {
+        patch = this.queue.pop();
+        if (!this.frustum.containsPoint(patch.object.position)) {
+          patch.parent.queue.push(patch);
+        } else {
+          this.buildPatch(patch);
+        }
+      }
       _ref = this.tiles;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         tile = _ref[_i];

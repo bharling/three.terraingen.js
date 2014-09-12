@@ -15,7 +15,9 @@
 
     GeometryProvider.prototype.height = 257;
 
-    function GeometryProvider() {}
+    function GeometryProvider(source) {
+      this.source = source;
+    }
 
     GeometryProvider.prototype.setRegion = function(x, y, width, height) {
       this.x = x != null ? x : 0;
@@ -35,11 +37,8 @@
   THREE.terraingen.BTTGeometryProvider = (function(_super) {
     __extends(BTTGeometryProvider, _super);
 
-    function BTTGeometryProvider(x, y, width, height) {
-      this.x = x != null ? x : 0;
-      this.y = y != null ? y : 0;
-      this.width = width != null ? width : 257;
-      this.height = height != null ? height : 257;
+    function BTTGeometryProvider(source) {
+      this.source = source;
     }
 
     BTTGeometryProvider.prototype.get = function(maxVariance) {
@@ -74,6 +73,121 @@
     };
 
     return BTTGeometryProvider;
+
+  })(THREE.terraingen.GeometryProvider);
+
+  THREE.terraingen.AABB = (function() {
+    function AABB(center, halfSize) {
+      this.c = center;
+      this.hs = halfSize;
+      this.computeBounds();
+    }
+
+    AABB.prototype.computeBounds = function() {
+      var xmax, xmin, ymax, ymin;
+      xmin = this.c.x - this.hs;
+      ymin = this.c.y - this.hs;
+      xmax = this.c.x + this.hs;
+      ymax = this.c.y + this.hs;
+      this.min = new THREE.Vector2(xmin, ymin);
+      this.max = new THREE.Vector2(xmax, ymax);
+      this.width = this.height = this.hs * 2;
+    };
+
+    AABB.prototype.containsPoint = function(point) {
+      if (point.x < this.min.x || point.x > this.max.x || point.y < this.min.y || point.y > this.max.y) {
+        return false;
+      }
+      return true;
+    };
+
+    AABB.prototype.containsAABB = function(box) {
+      if ((this.min.x <= box.min.x) && (box.max.x <= this.max.x) && (this.min.y <= box.min.y) && (box.max.x <= this.max.y)) {
+        return true;
+      }
+      return false;
+    };
+
+    AABB.prototype.intersects = function(box) {
+      if (box.max.x < this.min.x || box.min.x > this.max.x || box.max.y < this.min.y || box.min.y > this.max.y) {
+        return false;
+      }
+      return true;
+    };
+
+    return AABB;
+
+  })();
+
+  THREE.terraingen.PlaneGeometryProvider = (function(_super) {
+    __extends(PlaneGeometryProvider, _super);
+
+    PlaneGeometryProvider.prototype.vertsPerSide = 32;
+
+    function PlaneGeometryProvider(source) {
+      this.source = source;
+      this.lod = 1.0;
+    }
+
+    PlaneGeometryProvider.prototype.setBounds = function(bounds) {
+      this.bounds = bounds;
+    };
+
+    PlaneGeometryProvider.prototype.setRegion = function(x, y, width, height) {
+      var c, hs;
+      hs = width / 2;
+      c = new THREE.Vector2(x + hs, y + hs);
+      return this.bounds = new THREE.terraingen.AABB(c, hs);
+    };
+
+    PlaneGeometryProvider.prototype.setLOD = function(lod) {
+      this.lod = lod;
+    };
+
+    PlaneGeometryProvider.prototype.build = function() {
+      var a, b, c, color, d, face, geom, hw, i, ix, iz, j, normal, stride, w1, x, y, _i, _j, _k, _l, _ref, _ref1;
+      color = new THREE.Color(0xffffff);
+      color.setRGB(Math.random(), Math.random(), Math.random());
+      w1 = this.vertsPerSide + 1;
+      stride = this.bounds.width / this.vertsPerSide;
+      normal = new THREE.Vector3(0, 1, 0);
+      geom = new THREE.Geometry();
+      hw = this.bounds.width / 2;
+      for (i = _i = 0; _i < w1; i = _i += 1) {
+        y = i * stride;
+        for (j = _j = 0; _j < w1; j = _j += 1) {
+          x = j * stride;
+          geom.vertices.push(new THREE.Vector3(x, 0.0, -y));
+          geom.colors.push(color);
+        }
+      }
+      for (iz = _k = 0, _ref = this.vertsPerSide; _k < _ref; iz = _k += 1) {
+        for (ix = _l = 0, _ref1 = this.vertsPerSide; _l < _ref1; ix = _l += 1) {
+          a = ix + w1 * iz;
+          b = ix + w1 * (iz + 1);
+          c = (ix + 1) + w1 * (iz + 1);
+          d = (ix + 1) + w1 * iz;
+          face = new THREE.Face3(a, b, d);
+          face.normal.copy(normal);
+          face.vertexNormals.push(normal.clone(), normal.clone(), normal.clone());
+          face.vertexColors.push(color, color, color);
+          geom.faces.push(face);
+          face = new THREE.Face3(b, c, d);
+          face.normal.copy(normal);
+          face.vertexNormals.push(normal.clone(), normal.clone(), normal.clone());
+          face.vertexColors.push(color, color, color);
+          geom.faces.push(face);
+        }
+      }
+      console.log(geom);
+      return geom;
+    };
+
+    PlaneGeometryProvider.prototype.get = function() {
+      return this.build();
+    };
+
+    return PlaneGeometryProvider;
 
   })(THREE.terraingen.GeometryProvider);
 

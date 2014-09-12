@@ -89,9 +89,9 @@ class THREE.terraingen.generators.Perlin extends THREE.terraingen.generators.Gen
     g[0] * x + g[1] * y
     
   get: (x, y, z=0.0) ->
-    #key = ""+x+""+y
-    #if @cache[key]?
-      #return @cache[key]
+    #key = "_" + x.toString() + "_" + y.toString() + ""
+    #if typeof @cache[key] != "undefined"
+    #  return @cache[key]
     
     hgt = 0.0
     amplitude = 1.0
@@ -102,13 +102,9 @@ class THREE.terraingen.generators.Perlin extends THREE.terraingen.generators.Gen
       x *= 2.0
       y *= 2.0
       amplitude *= 0.5
-    # remap into 0..1 range  
-    #hgt = (hgt+1.0) * 0.5
-    #for filter in @filters
-    #  hgt = filter.apply hgt
+      
     #@cache[key] = hgt
     hgt
-      
  
   _getHeightAt: (xin, yin) ->
     # Skew the input space to determine which simplex cell we're in
