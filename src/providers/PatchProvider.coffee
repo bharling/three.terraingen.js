@@ -274,6 +274,7 @@ class THREE.terraingen.TileManager
     @currentTile = null
     @frustum = new THREE.Frustum()
     @cameraRect = []
+    @lastQueueLength = 0
     
     # build empty tiles into the queue
     for i in [-2 ... 2]
@@ -302,6 +303,7 @@ class THREE.terraingen.TileManager
       else
         @buildPatch patch
     
+
     for tile in @tiles
       to_build = tile.update camera, @frustum
       for b in to_build

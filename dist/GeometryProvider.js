@@ -231,7 +231,7 @@
           var _j, _ref1, _results1;
           _results1 = [];
           for (j = _j = 0, _ref1 = this.height; _j < _ref1; j = _j += 1) {
-            alt = (this.heightMapProvider.get(this.x + i, this.y + j)) * this.heightScale;
+            alt = (this.heightMapProvider.get(this.x + (i * this.squareUnits), this.y + (j * this.squareUnits))) * this.heightScale;
             _results1.push(geom.vertices.push(new THREE.Vector3(i * this.squareUnits, alt, j * this.squareUnits)));
           }
           return _results1;

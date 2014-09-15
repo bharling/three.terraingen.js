@@ -320,6 +320,7 @@
       this.currentTile = null;
       this.frustum = new THREE.Frustum();
       this.cameraRect = [];
+      this.lastQueueLength = 0;
       for (i = _i = -2; _i < 2; i = ++_i) {
         for (j = _j = -2; _j < 2; j = ++_j) {
           tile = new THREE.terraingen.Tile(i * 512, j * 512, this.meshProvider);
