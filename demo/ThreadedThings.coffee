@@ -104,7 +104,7 @@ window.NoiseGenerator =
       y *= 2.0
       amplitude *= 0.5
     #@cache[key] = hgt
-    hgt
+    hgt * 0.2
  
   getHeightAt: (xin, yin) ->
     # Skew the input space to determine which simplex cell we're in

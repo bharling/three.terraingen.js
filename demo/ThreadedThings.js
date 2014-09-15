@@ -120,7 +120,7 @@
         y *= 2.0;
         amplitude *= 0.5;
       }
-      return hgt;
+      return hgt * 0.2;
     },
     getHeightAt: function(xin, yin) {
       var F2, G2, X0, Y0, gi0, gi1, gi2, i, i1, ii, j, j1, jj, n0, n1, n2, s, t, t0, t1, t2, x0, x1, x2, y0, y1, y2;
