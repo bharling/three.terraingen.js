@@ -69,8 +69,6 @@
     getRegion: function(data) {
       var cfg, height, i, j, octaves, result, rx, ry, s, scale, width, x, y, _i, _j, _x, _y;
       s = parseInt(data.seed);
-      this.initRandom(s);
-      this.initMap();
       if (!this.p) {
         this.initMap();
       }
@@ -120,7 +118,7 @@
         y *= 2.0;
         amplitude *= 0.5;
       }
-      return hgt * 0.2;
+      return hgt * 0.3;
     },
     getHeightAt: function(xin, yin) {
       var F2, G2, X0, Y0, gi0, gi1, gi2, i, i1, ii, j, j1, jj, n0, n1, n2, s, t, t0, t1, t2, x0, x1, x2, y0, y1, y2;

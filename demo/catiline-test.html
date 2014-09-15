@@ -54,7 +54,9 @@
 		
 			//NoiseGenerator.Seed = 523542354534543;
 			
-			workers = cw(NoiseGenerator, 4);
+			NoiseGenerator.initRandom(33);
+			
+			workers = cw(NoiseGenerator, 2);
 			
 			
 			
@@ -111,7 +113,7 @@
 				
 				for (var i=0; i<NUM_TILES; i++ ) {
 					for (var j=0; j<NUM_TILES; j++) {
-						var params = {x:i*NOISE_SIZE, y:j*NOISE_SIZE, width:NOISE_SIZE, height:NOISE_SIZE, octaves:16, scale:scale, seed:seed}
+						var params = {x:i*NOISE_SIZE, y:j*NOISE_SIZE, width:NOISE_SIZE, height:NOISE_SIZE, octaves:10, scale:scale, seed:seed}
 						workers.getRegion(params).then(function (data) {
 							queue.push( data );
 						});
@@ -122,13 +124,13 @@
 			
 			
 			
-			
-			setInterval( function () {
+			function update () {
+				requestAnimationFrame(update);
 				if (queue.length) {
 					var d = queue.pop();
 					renderCanvas( d.results, d.data.x, d.data.y )
 				}
-			}, 10);
+			}
 			
 			var inpt = document.getElementById('seed');
 			var scaleinpt = document.getElementById('scale');
@@ -147,7 +149,7 @@
 			}
 			
 			
-			
+			update();
 			
 		</script>
 		

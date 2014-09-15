@@ -71,8 +71,8 @@ window.NoiseGenerator =
   getRegion: (data) ->
     s = parseInt data.seed
 
-    @initRandom s
-    @initMap()
+    #@initRandom s
+    #@initMap()
     
     if !@p
       @initMap()
@@ -104,7 +104,7 @@ window.NoiseGenerator =
       y *= 2.0
       amplitude *= 0.5
     #@cache[key] = hgt
-    hgt * 0.2
+    hgt * 0.3
  
   getHeightAt: (xin, yin) ->
     # Skew the input space to determine which simplex cell we're in
