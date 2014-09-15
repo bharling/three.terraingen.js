@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>three.terraingen.js</title>
+		<style type="text/css">
+			
+			html, body {
+				padding:0;
+				margin:0;
+				overflow:hidden;
+			}
+			
+			#heightMap {
+				position:absolute;
+				top:10px;
+				left:10px;
+			}
+			
+			#controls {
+				position:absolute;
+				right:10px;
+				top:10px;
+				padding:20px;
+				background:rgba(255,255,255,0.7);
+				z-index:100;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<div id="controls">
+			<label>Seed</label>
+			<input type="text" id="seed" value="545437820543">
+			<br>
+			<label>Scale</label>
+			<input type="range" id="scale" min="10" max="1000" value="50">
+		</div>
+		
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.js"></script>
+		<script type="text/javascript" src="../dist/libs/catiline.js"></script>
+		<script type="text/javascript" src="../dist/RNGProvider.js"></script>
+		<script type="text/javascript" src="../dist/NoiseProvider.js"></script>
+		<script type="text/javascript" src="../dist/NoiseModifierProvider.js"></script>
+		<script type="text/javascript" src="../dist/HeightMapProvider.js"></script>
+		<script type="text/javascript" src="../dist/GeometryProvider.js"></script>
+		<script type="text/javascript" src="../dist/MeshProvider.js"></script>
+		<script type="text/javascript" src="../dist/PatchProvider.js"></script>
+		<script type="text/javascript" src="../dist/FilterProvider.js"></script>
+		<script type="text/javascript" src="ThreadedThings.js"></script>
+		<script type="text/javascript" src="TrackBallControls.js"></script>
+		<script type="text/javascript" src="OrbitControls.js"></script>
+		
+		<script type="text/javascript">
+		
+			//NoiseGenerator.Seed = 523542354534543;
+			
+			workers = cw(NoiseGenerator, 10);
+			
+			
+			
+			
+			
+			var NOISE_SIZE = 64;
+			var NUM_TILES = 12;
+			
+			function renderCanvas (noiseResult, x, y) {
+				
+				
+				var canvas = document.createElement('canvas');
+				canvas.height = NOISE_SIZE;
+		 		canvas.width = NOISE_SIZE;
+		 		
+		 		canvas.style.position = "absolute";
+		 		canvas.style.top = y + "px";
+		 		canvas.style.left = x + "px";
+		 		
+		 		document.body.appendChild(canvas);
+		 		
+		 		
+		 		
+		 		var ctx = canvas.getContext('2d')
+		 		var id = ctx.createImageData(1,1);
+		 		var d = id.data;
+		 		
+		 		
+		 		for (var i = 0; i < NOISE_SIZE; i++) {
+		 			for (var j = 0; j < NOISE_SIZE; j++) {
+		 				
+		 				var hgt = noiseResult[ i*NOISE_SIZE + j ]
+		 				h = hgt + 1.0 * 0.5;
+		 				var pix = Math.min(255, Math.max(0, Math.floor( (1.0-h) * 256 )));
+		 				d[0] = d[1] = d[2] = pix;
+		 				d[3] = 255;
+		 				ctx.putImageData(id, i, j);
+		 			}
+		 		}
+		 		
+		 		
+			}
+			
+			
+			var queue = [];
+			
+			function doIt (seed, scale) {
+				
+				var canvases = document.getElementsByTagName('canvas');
+				
+				for (var i=0; i<canvases.length; i++) {
+					document.body.removeChild(canvases[i]);
+				}
+				
+				for (var i=0; i<NUM_TILES; i++ ) {
+					for (var j=0; j<NUM_TILES; j++) {
+						var params = {x:i*NOISE_SIZE, y:j*NOISE_SIZE, width:NOISE_SIZE, height:NOISE_SIZE, octaves:12, scale:scale, seed:seed}
+						workers.getRegion(params).then(function (data) {
+							queue.push( data );
+						});
+					}
+					
+				}
+			}
+			
+			
+			
+			
+			setInterval( function () {
+				if (queue.length) {
+					var d = queue.pop();
+					renderCanvas( d.results, d.data.x, d.data.y )
+				}
+			}, 10);
+			
+			var inpt = document.getElementById('seed');
+			var scaleinpt = document.getElementById('scale');
+			inpt.onkeyup = function () {
+				var scale = getScale(scaleinpt.value)
+				doIt(this.value, scale);
+			}
+			
+			function getScale (val) {
+				return val / 100000;
+			}
+			
+			scaleinpt.onchange = function () {
+				var seed = inpt.value
+				doIt( seed, getScale( this.value ));
+			}
+			
+			
+			
+			
+		</script>
+		
+		
+	</body>
+</html>
