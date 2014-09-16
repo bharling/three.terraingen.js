@@ -71,6 +71,10 @@ window.NoiseGenerator =
     g[0] * x + g[1] * y
     
     
+  fillGeometry: (data) ->
+    t = new THREE.Geometry()
+    return t
+    
   getVertices: (data) ->
     # we expect data to contain a Float32Array called vertices of the correct length
     @initRandom parseInt( data.seed )
@@ -97,7 +101,7 @@ window.NoiseGenerator =
         
         result[jj] = _x
         
-        result[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale )
+        result[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale ) * 300.0;
         
         result[jj+2] = _y
         jj+=3

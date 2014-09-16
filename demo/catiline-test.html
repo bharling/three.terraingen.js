@@ -64,29 +64,38 @@
 			
 			var noiseFunction = new THREE.terraingen.modifiers.Multiply (
 				new THREE.terraingen.modifiers.Mix (
-					new THREE.terraingen.generators.Perlin (
-						new THREE.terraingen.MersenneTwisterProvider(1222).random, 12, 0.0001
-					),
-					new THREE.terraingen.modifiers.Abs (
+					/*new THREE.terraingen.modifiers.Min (
 						new THREE.terraingen.generators.Perlin (
-							new THREE.terraingen.MersenneTwisterProvider(2349243).random, 12, 0.0008
+							new THREE.terraingen.MersenneTwisterProvider(1222).random, 16, 0.001
+						),
+						new THREE.terraingen.modifiers.Constant( 0.3 )
+					),*/
+					
+					new THREE.terraingen.modifiers.Constant(-0.5),
+					
+					new THREE.terraingen.modifiers.Invert(
+						new THREE.terraingen.modifiers.Abs (
+							new THREE.terraingen.generators.Perlin (
+								new THREE.terraingen.MersenneTwisterProvider(2349243).random, 12, 0.0008
+							)
 						)
 					),
+					
 					new THREE.terraingen.generators.Perlin (
-						new THREE.terraingen.MersenneTwisterProvider(32432432).random, 8, 0.001
+						new THREE.terraingen.MersenneTwisterProvider(32432432).random, 2, 0.001
 					)
 				
 				),
 				
-				new THREE.terraingen.modifiers.Constant(0.8)
+				new THREE.terraingen.modifiers.Constant(1.0)
 			)
 			
 			NoiseGenerator.noiseGenerator = noiseFunction;
 			
 			workers = cw(NoiseGenerator, 4);
 			
-			var NOISE_SIZE = 256;
-			var NUM_TILES = 4;
+			var NOISE_SIZE = 128;
+			var NUM_TILES = 16;
 			
 			function renderCanvas (noiseResult, x, y) {
 				
@@ -113,7 +122,7 @@
 		 				
 		 				var hgt = noiseResult[ i*NOISE_SIZE + j ]
 		 				h = hgt + 1.0 * 0.5;
-		 				var pix = Math.min(255, Math.max(0, Math.floor( (1.0-h) * 256 )));
+		 				var pix = Math.min(255, Math.max(0, Math.floor( (h) * 256 )));
 		 				d[0] = d[1] = d[2] = pix;
 		 				d[3] = 255;
 		 				ctx.putImageData(id, i, j);
@@ -205,23 +214,6 @@
 			
 			// test vertices
 			
-			var config = {
-				type : "Mix",
-				sources : [
-					{
-						type: "Perlin",
-						sources: [
-							{
-								type:"MT",
-								seed:748237932,
-							}
-						]
-					},
-					{
-						
-					}
-				]
-			};
 			
 			
 			
@@ -234,11 +226,99 @@
 				vertices: new Float32Array ( 33 * 33 * 3 )
 			}
 			
-			workers.getVertices(prams).then( function (data) {
-				console.log(data.vertices);
-			});
+
+			
+			var scene, renderer, camera, controls;
+			
+			function createScene () {
+				 	camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
+			 		camera.position.z = 500
+			 		camera.position.y = 100
+			 		//camera.lookAt = new THREE.Vector3(800,0,1000)
+			 		
+			 		scene = new THREE.Scene();
+			 		
+			 		//scene.add( new THREE.AmbientLight( 0x444444 ));
+			 		
+			 		renderer = new THREE.WebGLRenderer();
+			 		
+			 		renderer.setSize( window.innerWidth, window.innerHeight );
+			 		
+			 		document.body.appendChild(renderer.domElement);
+			 		
+			 		controls = new THREE.OrbitControls(camera);
+				
+			}
 			
 			
+			createScene()
+			
+			var SEGMENTS = 64;
+			
+			var NUM_VERTS = SEGMENTS * SEGMENTS * 3;
+			
+			var indices = new Uint16Array( NUM_VERTS / 3  );
+			var chunkSize = 21845;
+			for (var i=0; i<indices.length; i++) {
+				indices[i] = i % (3* chunkSize);
+			}
+			
+			
+			var origin = -((NUM_TILES * NOISE_SIZE) / 2);
+			
+			for (var i=0; i<NUM_TILES; i++ ) {
+					
+					var _x = origin + (i * NOISE_SIZE);
+					
+					for (var j=0; j<NUM_TILES; j++) {
+						
+						var _y = origin + (j * NOISE_SIZE);
+						
+						var params = {
+							bounds: new THREE.Box2( new THREE.Vector2( _x, _y ), new THREE.Vector2( _x + NOISE_SIZE, _y + NOISE_SIZE ) ),
+							segments: SEGMENTS,
+							octaves:12,
+							scale:0.005,
+							seed:623424322,
+							vertices: new Float32Array ( SEGMENTS * SEGMENTS * 3 )
+						}
+						workers.getVertices(params).then( function (data) {
+							var geom = new THREE.BufferGeometry();
+							geom.addAttribute( 'position', new THREE.BufferAttribute( data.vertices, 3 ) );
+							geom.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ));
+							//geom.computeFaceNormals();
+						    geom.computeVertexNormals(true);
+							var material = new THREE.MeshBasicMaterial();
+							var mesh = new THREE.Line(geom, material);
+							//mesh.position.x = data.bounds.min.x;
+							//mesh.position.z = data.bounds.min.z;
+							scene.add(mesh);
+						}, function (err) {
+							console.log(err);
+						});
+					}
+				}
+			
+			
+			
+			function animate () {
+		 		requestAnimationFrame(animate);
+		 		controls.update();
+		 		render();
+		 	}
+			
+		 	
+		 	function render () {
+		 		var time = Date.now() * 0.001;
+		
+				
+				//mesh.rotation.y = time * 0.2;
+		 		
+				
+				renderer.render( scene, camera );
+		 	}
+			
+			animate();
 			
 			
 		</script>

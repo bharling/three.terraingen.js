@@ -70,6 +70,11 @@
     dot: function(g, x, y) {
       return g[0] * x + g[1] * y;
     },
+    fillGeometry: function(data) {
+      var t;
+      t = new THREE.Geometry();
+      return t;
+    },
     getVertices: function(data) {
       var height, i, j, jj, octaves, result, scale, stepX, stepY, width, x, y, _h, _i, _j, _w, _x, _y;
       this.initRandom(parseInt(data.seed));
@@ -90,7 +95,7 @@
         for (j = _j = 0; _j < height; j = _j += 1) {
           _y = y + (j * stepY);
           result[jj] = _x;
-          result[jj + 1] = this.getNoiseValue(_x, _y, 0.0, octaves, scale);
+          result[jj + 1] = this.getNoiseValue(_x, _y, 0.0, octaves, scale) * 300.0;
           result[jj + 2] = _y;
           jj += 3;
         }
