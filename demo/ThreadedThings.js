@@ -1,4 +1,8 @@
 (function() {
+  var abs, floor, sqrt;
+
+  sqrt = Math.sqrt, floor = Math.floor, abs = Math.abs;
+
   window.NoiseGenerator = {
     ready: false,
     N: 624,
@@ -66,12 +70,37 @@
     dot: function(g, x, y) {
       return g[0] * x + g[1] * y;
     },
-    getRegion: function(data) {
-      var cfg, height, i, j, octaves, result, rx, ry, s, scale, width, x, y, _i, _j, _x, _y;
-      s = parseInt(data.seed);
-      if (!this.p) {
-        this.initMap();
+    getVertices: function(data) {
+      var height, i, j, jj, octaves, result, scale, stepX, stepY, width, x, y, _h, _i, _j, _w, _x, _y;
+      this.initRandom(parseInt(data.seed));
+      this.initMap();
+      x = data.bounds.min.x;
+      y = data.bounds.min.y;
+      width = height = data.segments;
+      octaves = data.octaves;
+      scale = data.scale;
+      result = data.vertices;
+      _w = data.bounds.max.x - data.bounds.min.x;
+      _h = data.bounds.max.y - data.bounds.min.y;
+      stepX = _w / data.segments;
+      stepY = _h / data.segments;
+      jj = 0;
+      for (i = _i = 0; _i < width; i = _i += 1) {
+        _x = x + (i * stepX);
+        for (j = _j = 0; _j < height; j = _j += 1) {
+          _y = y + (j * stepY);
+          result[jj] = _x;
+          result[jj + 1] = this.getNoiseValue(_x, _y, 0.0, octaves, scale);
+          result[jj + 2] = _y;
+          jj += 3;
+        }
       }
+      return data;
+    },
+    getRegion: function(data) {
+      var cfg, height, i, j, jj, octaves, result, rx, ry, scale, width, x, y, _i, _j, _x, _y;
+      this.initRandom(parseInt(data.seed));
+      this.initMap();
       x = data.x;
       y = data.y;
       rx = data.x;
@@ -80,22 +109,21 @@
       height = data.height;
       octaves = data.octaves;
       scale = data.scale;
-      result = [];
+      result = data.container;
+      jj = 0;
       for (i = _i = 0; _i < width; i = _i += 1) {
         _x = x + i;
         for (j = _j = 0; _j < height; j = _j += 1) {
           _y = y + j;
-          result.push(this.getNoiseValue(_x, _y, 0.0, octaves, scale));
+          result[jj] = this.getNoiseValue(_x, _y, 0.0, octaves, scale);
+          jj++;
         }
       }
       cfg = {
         x: rx,
         y: ry
       };
-      return {
-        results: result,
-        data: cfg
-      };
+      return data;
     },
     getNoiseValue: function(x, y, z, octaves, scale) {
       var amplitude, hgt, o, _i;
@@ -108,6 +136,7 @@
       if (scale == null) {
         scale = 1.0;
       }
+      return this.noiseGenerator.get(x, y);
       hgt = 0.0;
       amplitude = 1.0;
       x *= scale;

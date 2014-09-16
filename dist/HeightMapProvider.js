@@ -124,7 +124,7 @@
         var _i, _results;
         _results = [];
         for (i = _i = 0; _i < 256; i = ++_i) {
-          _results.push(floor(random() * 256));
+          _results.push(Math.floor(random() * 256));
         }
         return _results;
       })();
@@ -162,11 +162,11 @@
 
     Perlin.prototype._getHeightAt = function(xin, yin) {
       var F2, G2, X0, Y0, gi0, gi1, gi2, i, i1, ii, j, j1, jj, n0, n1, n2, s, t, t0, t1, t2, x0, x1, x2, y0, y1, y2;
-      F2 = 0.5 * (sqrt(3.0) - 1.0);
+      F2 = 0.5 * (Math.sqrt(3.0) - 1.0);
       s = (xin + yin) * F2;
-      i = floor(xin + s);
-      j = floor(yin + s);
-      G2 = (3.0 - sqrt(3.0)) / 6.0;
+      i = Math.floor(xin + s);
+      j = Math.floor(yin + s);
+      G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
       t = (i + j) * G2;
       X0 = i - t;
       Y0 = j - t;

@@ -147,7 +147,7 @@
       if (z == null) {
         z = 0.0;
       }
-      return abs(this.source.get(x, y, z));
+      return Math.abs(this.source.get(x, y, z));
     };
 
     return Abs;
@@ -166,7 +166,7 @@
       if (z == null) {
         z = 0.0;
       }
-      return max(this.source1.get(x, y, z), this.source2.get(x, y, z));
+      return Math.max(this.source1.get(x, y, z), this.source2.get(x, y, z));
     };
 
     return Max;
@@ -185,7 +185,7 @@
       if (z == null) {
         z = 0.0;
       }
-      return min(this.source1.get(x, y, z), this.source2.get(x, y, z));
+      return Math.min(this.source1.get(x, y, z), this.source2.get(x, y, z));
     };
 
     return Min;
@@ -206,7 +206,7 @@
         z = 0.0;
       }
       val = (1.0 + this.source1.get(x, y, z)) * 0.5;
-      val = pow(val, this.source2.get(x, y, z));
+      val = Math.pow(val, this.source2.get(x, y, z));
       return (val * 2.0) - 1.0;
     };
 

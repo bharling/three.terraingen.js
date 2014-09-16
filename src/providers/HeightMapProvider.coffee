@@ -81,7 +81,7 @@ class THREE.terraingen.generators.Perlin extends THREE.terraingen.generators.Gen
  
   constructor: (@RNGFunction=Math.random, @octaves=8, @scale=1.0) ->
     random = @RNGFunction
-    @p = (floor(random() * 256) for i in [0...256])
+    @p = (Math.floor(random() * 256) for i in [0...256])
     # To remove the need for index wrapping, double the permutation table length
     @perm = (@p[i & 255] for i in [0...512])
  
@@ -108,11 +108,11 @@ class THREE.terraingen.generators.Perlin extends THREE.terraingen.generators.Gen
  
   _getHeightAt: (xin, yin) ->
     # Skew the input space to determine which simplex cell we're in
-    F2 = 0.5*(sqrt(3.0)-1.0)
+    F2 = 0.5*(Math.sqrt(3.0)-1.0)
     s = (xin+yin)*F2 # Hairy factor for 2D
-    i = floor(xin+s)
-    j = floor(yin+s)
-    G2 = (3.0-sqrt(3.0))/6.0
+    i = Math.floor(xin+s)
+    j = Math.floor(yin+s)
+    G2 = (3.0-Math.sqrt(3.0))/6.0
     t = (i+j)*G2
  
     # Unskew the cell origin back to (x,y) space

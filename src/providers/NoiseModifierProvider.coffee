@@ -59,19 +59,19 @@ class THREE.terraingen.modifiers.Abs extends THREE.terraingen.modifiers.Modifier
   constructor: (@source) ->
     
   get: (x, y, z=0.0) ->
-    return abs @source.get(x,y,z)
+    return Math.abs @source.get(x,y,z)
     
 class THREE.terraingen.modifiers.Max extends THREE.terraingen.modifiers.Modifier
   constructor: (@source1, @source2) ->
     
   get: (x, y, z=0.0) ->
-    return max @source1.get(x,y,z), @source2.get(x,y,z)
+    return Math.max @source1.get(x,y,z), @source2.get(x,y,z)
     
 class THREE.terraingen.modifiers.Min extends THREE.terraingen.modifiers.Modifier
   constructor: (@source1, @source2) ->
     
   get: (x, y, z=0.0) ->
-    return min @source1.get(x,y,z), @source2.get(x,y,z)
+    return Math.min @source1.get(x,y,z), @source2.get(x,y,z)
     
     
 class THREE.terraingen.modifiers.Pow extends THREE.terraingen.modifiers.Modifier
@@ -79,7 +79,7 @@ class THREE.terraingen.modifiers.Pow extends THREE.terraingen.modifiers.Modifier
     
   get: (x, y, z=0.0) ->
     val = ( 1.0 + @source1.get(x,y,z) ) * 0.5
-    val = pow val, @source2.get(x,y,z)
+    val = Math.pow val, @source2.get(x,y,z)
     return (val*2.0) - 1.0
     
     

@@ -32,8 +32,10 @@
 			<label>Seed</label>
 			<input type="text" id="seed" value="545437820543">
 			<br>
-			<label>Scale</label>
-			<input type="range" id="scale" min="10" max="10000" value="50">
+			<label>X</label>
+			<input type="range" id="pos_x" min="0" max="10000" value="0">
+			<label>Y</label>
+			<input type="range" id="pos_y" min="0" max="10000" value="0">
 		</div>
 		
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.js"></script>
@@ -56,14 +58,35 @@
 			
 			NoiseGenerator.initRandom(33);
 			
-			workers = cw(NoiseGenerator, 2);
 			
 			
 			
 			
+			var noiseFunction = new THREE.terraingen.modifiers.Multiply (
+				new THREE.terraingen.modifiers.Mix (
+					new THREE.terraingen.generators.Perlin (
+						new THREE.terraingen.MersenneTwisterProvider(1222).random, 12, 0.0001
+					),
+					new THREE.terraingen.modifiers.Abs (
+						new THREE.terraingen.generators.Perlin (
+							new THREE.terraingen.MersenneTwisterProvider(2349243).random, 12, 0.0008
+						)
+					),
+					new THREE.terraingen.generators.Perlin (
+						new THREE.terraingen.MersenneTwisterProvider(32432432).random, 8, 0.001
+					)
+				
+				),
+				
+				new THREE.terraingen.modifiers.Constant(0.8)
+			)
 			
-			var NOISE_SIZE = 128;
-			var NUM_TILES = 8;
+			NoiseGenerator.noiseGenerator = noiseFunction;
+			
+			workers = cw(NoiseGenerator, 4);
+			
+			var NOISE_SIZE = 256;
+			var NUM_TILES = 4;
 			
 			function renderCanvas (noiseResult, x, y) {
 				
@@ -103,7 +126,12 @@
 			
 			var queue = [];
 			
-			function doIt (seed, scale) {
+			function doIt (posx, posy) {
+				
+				
+				var px = posx;
+				var py = posy;
+				
 				
 				var canvases = document.getElementsByTagName('canvas');
 				
@@ -113,12 +141,29 @@
 				
 				for (var i=0; i<NUM_TILES; i++ ) {
 					for (var j=0; j<NUM_TILES; j++) {
-						var params = {x:i*NOISE_SIZE, y:j*NOISE_SIZE, width:NOISE_SIZE, height:NOISE_SIZE, octaves:10, scale:scale, seed:seed}
-						workers.getRegion(params).then(function (data) {
-							queue.push( data );
-						});
+						var params = {
+							
+							x_screen: i*NOISE_SIZE,
+							y_screen: j*NOISE_SIZE,
+							
+							x:posx + (i*NOISE_SIZE), 
+							y:posy + (j*NOISE_SIZE), 
+							width:NOISE_SIZE, 
+							height:NOISE_SIZE, 
+							octaves:10, 
+							scale:1.0, 
+							seed:424324,
+							container: new Float32Array( NOISE_SIZE * NOISE_SIZE )
+						}
+						workers.getRegion(params).then(
+							function (data) {
+								queue.push( data )
+							}, 
+							function (err) {
+								console.log(err)
+							}
+						);
 					}
-					
 				}
 			}
 			
@@ -128,28 +173,73 @@
 				requestAnimationFrame(update);
 				if (queue.length) {
 					var d = queue.pop();
-					renderCanvas( d.results, d.data.x, d.data.y )
+					renderCanvas( d.container, d.x_screen, d.y_screen )
 				}
 			}
 			
-			var inpt = document.getElementById('seed');
-			var scaleinpt = document.getElementById('scale');
-			inpt.onkeyup = function () {
+			var inptX = document.getElementById('pos_x');
+			var inptY = document.getElementById('pos_y');
+			
+			var btn = document.getElementById('btn_go');
+			
+			inptX.onchange = inptY.onchange = function () {
+				var _x = parseInt ( inptX.value );
+				var _y = parseInt ( inptY.value );
+				doIt(_x,_y);
+			}
+			
+			
+			
+			/*inpt.onkeyup = function () {
 				var scale = getScale(scaleinpt.value)
 				doIt(this.value, scale);
-			}
+			}*/
 			
-			function getScale (val) {
-				return val / 100000;
-			}
 			
-			scaleinpt.onchange = function () {
+			/*scaleinpt.onchange = function () {
 				var seed = inpt.value
 				doIt( seed, getScale( this.value ));
-			}
-			
+			}*/
 			
 			update();
+			
+			// test vertices
+			
+			var config = {
+				type : "Mix",
+				sources : [
+					{
+						type: "Perlin",
+						sources: [
+							{
+								type:"MT",
+								seed:748237932,
+							}
+						]
+					},
+					{
+						
+					}
+				]
+			};
+			
+			
+			
+			var prams = {
+				bounds: new THREE.Box2( new THREE.Vector2( 0, 0 ), new THREE.Vector2( 128, 128 ) ),
+				segments: 33,
+				octaves:12,
+				scale:0.005,
+				seed:623424322,
+				vertices: new Float32Array ( 33 * 33 * 3 )
+			}
+			
+			workers.getVertices(prams).then( function (data) {
+				console.log(data.vertices);
+			});
+			
+			
+			
 			
 		</script>
 		

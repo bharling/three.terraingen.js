@@ -1,3 +1,6 @@
+{sqrt, floor, abs} = Math
+
+
 window.NoiseGenerator =
   ready : false
   N : 624
@@ -68,14 +71,42 @@ window.NoiseGenerator =
     g[0] * x + g[1] * y
     
     
-  getRegion: (data) ->
-    s = parseInt data.seed
-
-    #@initRandom s
-    #@initMap()
+  getVertices: (data) ->
+    # we expect data to contain a Float32Array called vertices of the correct length
+    @initRandom parseInt( data.seed )
+    @initMap()
     
-    if !@p
-      @initMap()
+    x = data.bounds.min.x
+    y = data.bounds.min.y
+    width = height = data.segments
+    octaves = data.octaves
+    scale = data.scale
+    result = data.vertices
+    
+    _w = data.bounds.max.x - data.bounds.min.x
+    _h = data.bounds.max.y - data.bounds.min.y
+    
+    stepX = _w / data.segments
+    stepY = _h / data.segments
+    
+    jj = 0
+    for i in [0 ... width] by 1
+      _x = x + (i*stepX)
+      for j in [0 ... height] by 1
+        _y = y + (j*stepY)
+        
+        result[jj] = _x
+        
+        result[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale )
+        
+        result[jj+2] = _y
+        jj+=3
+    data
+    
+    
+  getRegion: (data) ->
+    @initRandom parseInt( data.seed )
+    @initMap()
     x = data.x
     y = data.y
     rx = data.x
@@ -84,16 +115,22 @@ window.NoiseGenerator =
     height = data.height
     octaves = data.octaves
     scale = data.scale
-    result = []
+    result = data.container
+    jj = 0
     for i in [0 ... width] by 1
       _x = x + i
       for j in [0 ... height] by 1
         _y = y + j
-        result.push @getNoiseValue( _x, _y, 0.0, octaves, scale )
+        result[jj] = @getNoiseValue( _x, _y, 0.0, octaves, scale )
+        jj++
     cfg = x : rx, y : ry
-    results: result, data : cfg
+    data
     
   getNoiseValue: (x, y, z=0.0, octaves=8, scale=1.0) ->
+    return @noiseGenerator.get(x, y)
+    
+    #########
+    
     hgt = 0.0
     amplitude = 1.0
     x*=scale
