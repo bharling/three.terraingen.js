@@ -77,12 +77,12 @@ window.NoiseGenerator =
     
   getVertices: (data) ->
     # we expect data to contain a Float32Array called vertices of the correct length
-    @initRandom parseInt( data.seed )
-    @initMap()
+    #@initRandom parseInt( data.seed )
+    #@initMap()
     
     x = data.bounds.min.x
     y = data.bounds.min.y
-    width = height = data.segments
+    width = height = data.segments + 1
     octaves = data.octaves
     scale = data.scale
     result = data.vertices
@@ -90,20 +90,25 @@ window.NoiseGenerator =
     _w = data.bounds.max.x - data.bounds.min.x
     _h = data.bounds.max.y - data.bounds.min.y
     
-    stepX = _w / data.segments
-    stepY = _h / data.segments
+    stepX = Math.abs(_w / data.segments)
+    stepY = Math.abs(_h / data.segments)
+    
+    
     
     jj = 0
-    for i in [0 ... width] by 1
-      _x = x + (i*stepX)
-      for j in [0 ... height] by 1
-        _y = y + (j*stepY)
+    for i in [0 ... height] by 1
+      _y = y + (i*stepY)
+      for j in [0 ... width] by 1
+        _x = x + (j*stepX)
         
-        result[jj] = _x
+        data.vertices[jj] = (j*stepY)
         
-        result[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale ) * 300.0;
+        data.vertices[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale ) * 300.0;
         
-        result[jj+2] = _y
+        data.vertices[jj+2] = (i*stepX)
+        
+        
+        
         jj+=3
     data
     
