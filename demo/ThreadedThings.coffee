@@ -103,7 +103,7 @@ window.NoiseGenerator =
         
         data.vertices[jj] = (j*stepY)
         
-        data.vertices[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale ) * 300.0;
+        data.vertices[jj+1] = @getNoiseValue( _x, _y, 0.0, octaves, scale ) * 500.0;
         
         data.vertices[jj+2] = (i*stepX)
         

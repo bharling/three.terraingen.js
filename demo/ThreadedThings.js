@@ -93,7 +93,7 @@
         for (j = _j = 0; _j < width; j = _j += 1) {
           _x = x + (j * stepX);
           data.vertices[jj] = j * stepY;
-          data.vertices[jj + 1] = this.getNoiseValue(_x, _y, 0.0, octaves, scale) * 300.0;
+          data.vertices[jj + 1] = this.getNoiseValue(_x, _y, 0.0, octaves, scale) * 500.0;
           data.vertices[jj + 2] = i * stepX;
           jj += 3;
         }
