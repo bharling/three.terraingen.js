@@ -94,8 +94,10 @@
 			
 			workers = cw(NoiseGenerator, 4);
 			
-			var NOISE_SIZE = 128;
+			var NOISE_SIZE = 512;
 			var NUM_TILES = 36;
+			
+			
 			
 			function renderCanvas (noiseResult, x, y) {
 				
@@ -231,7 +233,7 @@
 			var scene, renderer, camera, controls;
 			
 			function createScene () {
-				 	camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 8000);
+				 	camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 10000);
 			 		camera.position.z = 500
 			 		camera.position.y = 500
 			 		//camera.lookAt = new THREE.Vector3(800,0,1000)
@@ -253,9 +255,11 @@
 			
 			createScene()
 			
-			var SEGMENTS = 32;
+			var SEGMENTS = 64;
 			
 			var NUM_VERTS = SEGMENTS * SEGMENTS * 3;
+			
+			console.log ("total verts = ", NUM_VERTS * NUM_TILES);
 			
 			var indices = new Uint16Array( NUM_VERTS / 3  );
 			var chunkSize = 21845;
