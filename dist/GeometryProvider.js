@@ -194,7 +194,7 @@
   THREE.terraingen.BTT = (function() {
     BTT.prototype.maxVariance = 0.02;
 
-    BTT.prototype.squareUnits = 1;
+    BTT.prototype.squareUnits = 6.0;
 
     BTT.prototype.heightScale = 1;
 
@@ -225,6 +225,7 @@
 
     BTT.prototype.createVertexBuffer = function(geom) {
       var alt, i, j, _i, _ref, _results;
+      console.log(this.width, this.height);
       _results = [];
       for (i = _i = 0, _ref = this.width; _i < _ref; i = _i += 1) {
         _results.push((function() {

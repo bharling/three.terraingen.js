@@ -168,7 +168,7 @@ class THREE.terraingen.PlaneGeometryProvider extends THREE.terraingen.GeometryPr
     
 class THREE.terraingen.BTT
   maxVariance: 0.02
-  squareUnits: 1
+  squareUnits: 6.0
   heightScale: 1
   
   constructor: (@x, @y, @width, @height, @heightMapProvider, @maxVariance) ->
@@ -185,7 +185,11 @@ class THREE.terraingen.BTT
     
     geom = new THREE.Geometry()
     @createVertexBuffer geom
+    
+    
+    
     @buildTree @width, @height, geom
+    
     @createIndexBuffer geom
     @cleanup()
     geom
@@ -194,6 +198,7 @@ class THREE.terraingen.BTT
    
    
   createVertexBuffer: (geom) ->
+    console.log @width, @height
     for i in [0 ... @width] by 1
       for j in [0 ... @height] by 1
         alt = (@heightMapProvider.get @x+(i*@squareUnits), @y+(j*@squareUnits)) * @heightScale
