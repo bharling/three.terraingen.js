@@ -71,4 +71,21 @@ window.TerrainWorker =
   getNoiseValue: (x, y, z=0.0, octaves=8, scale=1.0) ->
     return @noiseGenerator.get(x, y)
     
+  getVariance: (v1, v2, v3, vertices) ->
+    if Math.abs( vertices[v3] - vertices[v1] ) > @squareUnits or Math.abs(vertices[v3+2] - vertices[v1+2]) > @squareUnits
+      hi = Math.round(((vertices[v3] / @squareUnits) - (vertices[v1] / @squareUnits)) / 2 + (vertices[v1] / @squareUnits))
+      hj = Math.round(((vertices[v3+2] / @squareUnits) - (vertices[v1+2] / @squareUnits)) / 2 + (geom.vertices[v1+2] / @squareUnits))
+      
+      
+      
+      vh = Math.round((hi)*(@width) + hj) * 3
+      
+      alt = vertices[hi+1] #@heightMapProvider.get @x+hi, @y+hj
+      v = Math.abs(alt - ((vertices[v1+1] + vertices[v3+1]) / 2))
+      v = Math.max(v, @getVariance(v2, vh, v1, vertices))
+      v = Math.max(v, @getVariance(v3, vh, v2, vertices))
+    else
+      v = 0
+    return v
+    
     
