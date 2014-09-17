@@ -71,23 +71,32 @@
 						new THREE.terraingen.modifiers.Constant( 0.3 )
 					),*/
 					
-					new THREE.terraingen.modifiers.Constant(-1),
+					new THREE.terraingen.modifiers.Constant(1.0),
 					
-					new THREE.terraingen.modifiers.Invert(
-						new THREE.terraingen.modifiers.Abs (
-							new THREE.terraingen.generators.Perlin (
-								new THREE.terraingen.MersenneTwisterProvider(32).random, 12, 0.00015
+					new THREE.terraingen.modifiers.Multiply(
+						new THREE.terraingen.modifiers.Abs(
+							new THREE.terraingen.modifiers.Invert (
+								new THREE.terraingen.generators.Perlin (
+									new THREE.terraingen.MersenneTwisterProvider(98908124324432).random, 12, 0.00012
+								)
 							)
-						)
+						),
+						new THREE.terraingen.modifiers.Constant( 1.4 )
 					),
 					
-					new THREE.terraingen.generators.Perlin (
-						new THREE.terraingen.MersenneTwisterProvider(3335).random, 4, 0.0001
+					new THREE.terraingen.modifiers.Multiply(
+						new THREE.terraingen.generators.Perlin (
+							new THREE.terraingen.MersenneTwisterProvider(3335).random, 3, 0.00015
+						),
+						new THREE.terraingen.modifiers.Constant (
+							0.8
+						)
 					)
+					
 				
 				),
 				
-				new THREE.terraingen.modifiers.Constant(2.0)
+				new THREE.terraingen.modifiers.Constant(1.2)
 			)
 			
 			NoiseGenerator.noiseGenerator = noiseFunction;
@@ -95,7 +104,7 @@
 			workers = cw(NoiseGenerator, 10);
 			
 			var NOISE_SIZE = 512;
-			var NUM_TILES = 8;
+			var NUM_TILES = 24;
 			
 			
 			
@@ -233,7 +242,7 @@
 			var scene, renderer, camera, controls;
 			
 			function createScene () {
-				 	camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 13000);
+				 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 18000);
 			 		camera.position.z = 500
 			 		camera.position.y = 4000
 			 		//camera.lookAt = new THREE.Vector3(800,0,1000)
@@ -242,7 +251,7 @@
 			 		
 			 		//scene.add( new THREE.AmbientLight( 0x444444 ));
 			 		
-			 		renderer = new THREE.WebGLRenderer();
+			 		renderer = new THREE.WebGLRenderer({antialias:true});
 			 		
 			 		renderer.setSize( window.innerWidth, window.innerHeight );
 			 		
@@ -255,7 +264,7 @@
 			
 			createScene()
 			
-			var SEGMENTS = 128;
+			var SEGMENTS = 64;
 			
 			var NUM_VERTS = SEGMENTS * SEGMENTS * 3;
 			
@@ -304,30 +313,54 @@
 			
 			
 			var origin = -((NUM_TILES * NOISE_SIZE) / 2);
+			var center = new THREE.Vector2(0,0);
+			
+			var tiles = [];
 			
 			for (var i=0; i<NUM_TILES; i++ ) {
 					
-					var _x = origin + (i * NOISE_SIZE);
+				var _x = origin + (i * NOISE_SIZE);
+				
+				for (var j=0; j<NUM_TILES; j++) {
 					
-					for (var j=0; j<NUM_TILES; j++) {
-						
-						var _y = origin + (j * NOISE_SIZE);
-						
-						var params = {
-							bounds: new THREE.Box2( new THREE.Vector2( _x, _y ), new THREE.Vector2( _x + NOISE_SIZE, _y + NOISE_SIZE ) ),
-							segments: SEGMENTS,
-							octaves:12,
-							scale:0.005,
-							seed:623424322,
-							vertices: new Float32Array ( (SEGMENTS + 1) * (SEGMENTS+1) * 3 )
-						}
-						workers.getVertices(params).then( function (data) {
-							buildQueue.push(data);
-						}, function (err) {
-							console.log(err);
-						});
+					var _y = origin + (j * NOISE_SIZE);
+					
+					var bounds = new THREE.Box2( new THREE.Vector2( _x, _y ), new THREE.Vector2( _x + NOISE_SIZE, _y + NOISE_SIZE ) );
+					var dist = center.distanceTo(bounds.center());
+					
+					var params = {
+						bounds: bounds,
+						distance: dist,
+						segments: SEGMENTS,
+						octaves:12,
+						scale:0.005,
+						seed:623424322,
+						vertices: new Float32Array ( (SEGMENTS + 1) * (SEGMENTS+1) * 3 )
 					}
+					
+					tiles.push (params);
+					
 				}
+			}
+			
+			tiles = tiles.sort(function (a, b) {
+				if (a.dist < b.dist) {
+					return -1;
+				} else if (a.dist > b.dist) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
+			
+			for (var i=0; i<tiles.length; i++ ) {
+				workers.getVertices(tiles[i]).then( function (data) {
+					buildQueue.push(data);
+				}, function (err) {
+					console.log(err);
+				});
+			}
+			
 			
 			
 			
