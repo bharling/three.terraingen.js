@@ -52,7 +52,7 @@
     },
     createIndexBuffer: function(data, tree) {
       var h, i, indices, jj, v1, v2, v3, w, _i, _ref;
-      indices = new Uint16Array(data.segments * data.segments * 6);
+      indices = new Uint16Array(this.indexCount * 6);
       w = (data.segments - 1) * this.squareUnits;
       h = (data.segments - 1) * this.squareUnits;
       jj = 0;
@@ -84,7 +84,7 @@
         for (j = _j = 0; _j < height; j = _j += 1) {
           _y = y + (j * stepY);
           data.vertices.buf[jj] = i * stepX;
-          data.vertices.buf[jj + 1] = this.getNoiseValue(_x, _y) * 600;
+          data.vertices.buf[jj + 1] = this.getNoiseValue(_x, _y) * 1200;
           data.vertices.buf[jj + 2] = j * stepY;
           jj += 3;
         }
@@ -160,6 +160,7 @@
     },
     buildTree: function(width, height, data) {
       this.tree = [];
+      this.indexCount = 0;
       this.tree.push(this.newTri(0, width - 1, width + (width * (height - 1)) - 1));
       this.tree.push(this.newTri(width - 1 + (width * (height - 1)), width * (height - 1), 0));
       this.tree[0].bn = 1;
@@ -181,6 +182,8 @@
           this.splitFace(f, data);
           this.buildFace(this.tree[f].lc, data);
           this.buildFace(this.tree[f].rc, data);
+        } else {
+          this.indexCount++;
         }
       }
     },

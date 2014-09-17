@@ -44,7 +44,7 @@ window.TerrainWorker =
     data
     
   createIndexBuffer: (data, tree) ->
-    indices = new Uint16Array( data.segments * data.segments * 6  )
+    indices = new Uint16Array( @indexCount * 6  )
     w = (data.segments-1)*@squareUnits
     h = (data.segments-1)*@squareUnits
     jj = 0
@@ -92,7 +92,7 @@ window.TerrainWorker =
         
         data.vertices.buf[jj] = (i*stepX)
         
-        data.vertices.buf[jj+1] = @getNoiseValue( _x, _y ) * 600;
+        data.vertices.buf[jj+1] = @getNoiseValue( _x, _y ) * 1200;
         
         data.vertices.buf[jj+2] = (j*stepY)
 
@@ -156,6 +156,7 @@ window.TerrainWorker =
     
   buildTree: (width, height, data) ->
     @tree = []
+    @indexCount = 0
     @tree.push @newTri 0, width-1, width+(width*(height-1)) - 1
     @tree.push @newTri width-1+(width*(height-1)), (width*(height-1)), 0
     @tree[0].bn = 1
@@ -180,6 +181,8 @@ window.TerrainWorker =
         @splitFace f, data
         @buildFace @tree[f].lc, data
         @buildFace @tree[f].rc, data
+      else
+        @indexCount++
     return
   
   splitFace: (f, data) ->
