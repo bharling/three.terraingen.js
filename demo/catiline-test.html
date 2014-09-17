@@ -164,8 +164,8 @@
 				geom.addAttribute( 'position', new THREE.BufferAttribute( data.vertices, 3 ) );
 				geom.computeFaceNormals();
 			    geom.computeVertexNormals(true);
-				var material = new THREE.MeshBasicMaterial({color:0x007765});
-				var mesh = new THREE.Line(geom, material);
+				var material = new THREE.MeshNormalMaterial();
+				var mesh = new THREE.Mesh(geom, material);
 				scene.add(mesh);
 				mesh.position.x = data.bounds.min.x;
 				mesh.position.z = data.bounds.min.y;
