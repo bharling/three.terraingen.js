@@ -94,10 +94,10 @@
 			var TILE_SIZE = 2048;
 			
 			// Number of tiles to pre-generate
-			var NUM_TILES = 24;
+			var NUM_TILES = 8;
 			
 			// Number of vertices per side of each tile
-			var SEGMENTS = 32;
+			var SEGMENTS = 64;
 			
 			// Total number of vertices we're going to put in the scene
 			var NUM_VERTS = SEGMENTS * SEGMENTS * 3;
@@ -122,10 +122,11 @@
 			var scene, renderer, camera, controls;
 			function createScene () {
 				 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 18000);
-			 		camera.position.z = 500
-			 		camera.position.y = 4000
+			 		camera.position.z = 2000;
+			 		camera.position.x = 2000;
+			 		camera.position.y = 4000;
 			 		scene = new THREE.Scene();
-			 		renderer = new THREE.WebGLRenderer({antialias:true});
+			 		renderer = new THREE.WebGLRenderer();
 			 		renderer.setSize( window.innerWidth, window.innerHeight );
 			 		document.body.appendChild(renderer.domElement);
 			 		controls = new THREE.OrbitControls(camera);
