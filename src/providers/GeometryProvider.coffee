@@ -168,7 +168,7 @@ class THREE.terraingen.PlaneGeometryProvider extends THREE.terraingen.GeometryPr
     
 class THREE.terraingen.BTT
   maxVariance: 0.02
-  squareUnits: 6.0
+  squareUnits: 1
   heightScale: 1
   
   constructor: (@x, @y, @width, @height, @heightMapProvider, @maxVariance) ->

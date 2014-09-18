@@ -194,7 +194,7 @@
   THREE.terraingen.BTT = (function() {
     BTT.prototype.maxVariance = 0.02;
 
-    BTT.prototype.squareUnits = 6.0;
+    BTT.prototype.squareUnits = 1;
 
     BTT.prototype.heightScale = 1;
 
