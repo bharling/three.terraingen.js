@@ -217,7 +217,6 @@
 					var bounds = new THREE.Box2( new THREE.Vector2( _x, _y ), new THREE.Vector2( _x + TILE_SIZE, _y + TILE_SIZE ) );
 					var dist = center.distanceTo(bounds.center());
 					_variance = 50 * (dist / max_dist);
-					console.log(_variance);
 					
 					var params = {
 						bounds: bounds,
@@ -283,6 +282,33 @@
 			 * Off we go!
 			 */
 			animate();
+			
+			var qtSize = 512;
+			
+			var bounds = new THREE.terraingen.AABB( new THREE.Vector2(qtSize / 2, qtSize / 2), qtSize);
+			var qt = new THREE.terraingen.QuadTree(bounds);
+			
+			for (var i=0; i<50; i++) {
+				var pos = new THREE.Vector2(  Math.random() * qtSize, Math.random() * qtSize );
+				var item = new THREE.terraingen.QuadTreePointItem(pos, {id:i});
+				qt.addPointItem(item);
+			}
+			
+			var canvas = document.createElement('canvas')
+			canvas.width = canvas.height = qtSize;
+			canvas.style.position = 'absolute';
+			canvas.style.top = '0px';
+			canvas.style.left = '0px';
+			document.body.appendChild(canvas);
+			
+			var ctx = canvas.getContext('2d');
+			
+			qt.draw(ctx);
+			ctx.strokeStyle = "red";
+			ctx.stroke();
+			
+			console.log(qt);
+			
 			
 			
 		</script>

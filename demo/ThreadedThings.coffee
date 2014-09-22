@@ -1,5 +1,8 @@
 {sqrt, floor, abs} = Math
 
+window.THREE or= {}
+
+THREE.terraingen or= {}
 
 class THREE.Vector3Buffer extends Array
   constructor: (@length) ->
@@ -12,6 +15,165 @@ class THREE.Vector3Buffer extends Array
     @buf
     
     
+class THREE.terraingen.Point
+  constructor: ( @x=0.0, @y=0.0 ) ->
+    
+  sub: (p2) ->
+    new Point @x - p2.x, @y - p2.y
+    
+  subSelf: (p2) ->
+    @x -= p2.x
+    @y -= p2.y
+    @
+    
+  add: (p2) ->
+    new Point @x + p2.x, @y + p2.y
+    
+  addSelf: (p2) ->
+    @x += p2.x
+    @y += p2.y
+    @
+    
+  copy: (p2) ->
+    @x = p2.x
+    @y = p2.y
+    @
+    
+    
+class THREE.terraingen.AABB
+  constructor: (@center, @size) ->
+    sHalf = size / 2
+    @min = new THREE.terraingen.Point center.x - sHalf, center.y - sHalf
+    @max = new THREE.terraingen.Point center.x + sHalf, center.y + sHalf
+    
+  containsPoint: (pt) ->
+    pt.x >= @min.x and pt.x <= @max.x and pt.y >= @min.y and pt.y <= @max.y
+    
+  containsBox: (box) ->
+    @min.x <= box.min.x and box.max.x <= @max.x and @min.y <= box.min.y and box.max.y <= @max.y
+    
+  copy: (box) ->
+    @min.copy box.min
+    @max.copy box.max
+    @
+    
+    
+  intersects: (box) ->
+    if box instanceof THREE.terraingen.Point
+      return @containsPoint box
+    not (box.max.x < @min.x or box.min.x > @max.x or box.max.y < @min.y or box.min.y > @max.y)
+    
+    
+class THREE.terraingen.QuadTreeBoundedItem
+  constructor:(@bounds, @data) ->
+    
+class THREE.terraingen.QuadTreePointItem
+  constructor:(@position, @data) ->
+
+class THREE.terraingen.QuadTree
+  max_items : 4
+  
+  constructor: (@bounds) ->
+    @nw = null
+    @ne = null
+    @se = null
+    @sw = null
+    @items = []
+    @isLeaf = true
+    
+    
+  addPointItem: (item) ->
+    if not @bounds.containsPoint item.position
+      return false
+      
+    if @isLeaf
+      @items.push item
+    else
+      for child in [@nw, @ne, @se, @sw]
+        if child.bounds.containsPoint item.position
+          child.addPointItem item
+          return true
+    if @items.length > @max_items
+      @split()
+    @
+          
+    
+  draw: (ctx) ->
+    
+
+    #ctx.beginPath()
+    #ctx.strokeStyle="red"
+    #ctx.fillStyle = "black"
+    #ctx.lineWidth="2"
+    ctx.rect @bounds.min.x, @bounds.min.y, @bounds.max.x, @bounds.max.y
+    
+    #if @isLeaf
+    #  for p in @items
+    #    if p instanceof THREE.terraingen.QuadTreePointItem
+    #      ctx.fillStyle = 'yellow'
+    #      ctx.beginPath()
+    #      ctx.rect p.position.x-3, p.position.y-3, 6, 6
+    #      ctx.fill()
+    #else
+    if not @isLeaf
+      for child in [@nw, @ne, @se, @sw]
+        child.draw ctx
+    
+    
+  addItem:(item) ->
+    if not @bounds.containsBox item.bounds
+      return false
+      
+    if @isLeaf
+      @items.push item
+    else
+      for child in [@nw, @ne, @se, @sw]
+        if child.bounds.intersects item.bounds
+          child.addItem item
+    
+    if @items.length > @max_items
+      @split()
+      
+    return true
+      
+  query: (bounds) ->
+    results = []
+    if not @bounds.intersects bounds
+      return []
+      
+    if @isLeaf
+      return @items
+      
+    for child in [@nw, @ne, @se, @sw]
+      results = results.concat child.query( bounds )
+      
+    return result
+      
+    
+      
+  split: ->
+    hb = @bounds.size / 2
+    qb = hb / 2
+    c = @bounds.center
+    @nw = new QuadTree( new THREE.terraingen.AABB( new THREE.terraingen.Point( c.x - qb, c.y - qb ), hb  ) )
+    @ne = new QuadTree( new THREE.terraingen.AABB( new THREE.terraingen.Point( c.x + qb, c.y - qb ), hb  ) )
+    @se = new QuadTree( new THREE.terraingen.AABB( new THREE.terraingen.Point( c.x + qb, c.y + qb ), hb  ) )
+    @sw = new QuadTree( new THREE.terraingen.AABB( new THREE.terraingen.Point( c.x - qb, c.y + qb ), hb  ) )
+    
+    while @items.length
+      item = @items.pop()
+      if item instanceof THREE.terraingen.QuadTreePointItem
+        for child in [@nw, @ne, @se, @sw]
+          if child.bounds.containsPoint item.position
+            child.addPointItem item
+      else
+        for child in [@nw, @ne, @se, @sw]
+          if child.bounds.intersects item.bounds
+            child.addItem item
+    @isLeaf = false
+      
+    
+  
 
 
 window.TerrainWorker =

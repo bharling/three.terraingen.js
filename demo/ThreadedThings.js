@@ -5,6 +5,10 @@
 
   sqrt = Math.sqrt, floor = Math.floor, abs = Math.abs;
 
+  window.THREE || (window.THREE = {});
+
+  THREE.terraingen || (THREE.terraingen = {});
+
   THREE.Vector3Buffer = (function(_super) {
     __extends(Vector3Buffer, _super);
 
@@ -25,6 +29,222 @@
     return Vector3Buffer;
 
   })(Array);
+
+  THREE.terraingen.Point = (function() {
+    function Point(x, y) {
+      this.x = x != null ? x : 0.0;
+      this.y = y != null ? y : 0.0;
+    }
+
+    Point.prototype.sub = function(p2) {
+      return new Point(this.x - p2.x, this.y - p2.y);
+    };
+
+    Point.prototype.subSelf = function(p2) {
+      this.x -= p2.x;
+      this.y -= p2.y;
+      return this;
+    };
+
+    Point.prototype.add = function(p2) {
+      return new Point(this.x + p2.x, this.y + p2.y);
+    };
+
+    Point.prototype.addSelf = function(p2) {
+      this.x += p2.x;
+      this.y += p2.y;
+      return this;
+    };
+
+    Point.prototype.copy = function(p2) {
+      this.x = p2.x;
+      this.y = p2.y;
+      return this;
+    };
+
+    return Point;
+
+  })();
+
+  THREE.terraingen.AABB = (function() {
+    function AABB(center, size) {
+      var sHalf;
+      this.center = center;
+      this.size = size;
+      sHalf = size / 2;
+      this.min = new THREE.terraingen.Point(center.x - sHalf, center.y - sHalf);
+      this.max = new THREE.terraingen.Point(center.x + sHalf, center.y + sHalf);
+    }
+
+    AABB.prototype.containsPoint = function(pt) {
+      return pt.x >= this.min.x && pt.x <= this.max.x && pt.y >= this.min.y && pt.y <= this.max.y;
+    };
+
+    AABB.prototype.containsBox = function(box) {
+      return this.min.x <= box.min.x && box.max.x <= this.max.x && this.min.y <= box.min.y && box.max.y <= this.max.y;
+    };
+
+    AABB.prototype.copy = function(box) {
+      this.min.copy(box.min);
+      this.max.copy(box.max);
+      return this;
+    };
+
+    AABB.prototype.intersects = function(box) {
+      if (box instanceof THREE.terraingen.Point) {
+        return this.containsPoint(box);
+      }
+      return !(box.max.x < this.min.x || box.min.x > this.max.x || box.max.y < this.min.y || box.min.y > this.max.y);
+    };
+
+    return AABB;
+
+  })();
+
+  THREE.terraingen.QuadTreeBoundedItem = (function() {
+    function QuadTreeBoundedItem(bounds, data) {
+      this.bounds = bounds;
+      this.data = data;
+    }
+
+    return QuadTreeBoundedItem;
+
+  })();
+
+  THREE.terraingen.QuadTreePointItem = (function() {
+    function QuadTreePointItem(position, data) {
+      this.position = position;
+      this.data = data;
+    }
+
+    return QuadTreePointItem;
+
+  })();
+
+  THREE.terraingen.QuadTree = (function() {
+    QuadTree.prototype.max_items = 4;
+
+    function QuadTree(bounds) {
+      this.bounds = bounds;
+      this.nw = null;
+      this.ne = null;
+      this.se = null;
+      this.sw = null;
+      this.items = [];
+      this.isLeaf = true;
+    }
+
+    QuadTree.prototype.addPointItem = function(item) {
+      var child, _i, _len, _ref;
+      if (!this.bounds.containsPoint(item.position)) {
+        return false;
+      }
+      if (this.isLeaf) {
+        this.items.push(item);
+      } else {
+        _ref = [this.nw, this.ne, this.se, this.sw];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          child = _ref[_i];
+          if (child.bounds.containsPoint(item.position)) {
+            child.addPointItem(item);
+            return true;
+          }
+        }
+      }
+      if (this.items.length > this.max_items) {
+        this.split();
+      }
+      return this;
+    };
+
+    QuadTree.prototype.draw = function(ctx) {
+      var child, _i, _len, _ref, _results;
+      ctx.rect(this.bounds.min.x, this.bounds.min.y, this.bounds.max.x, this.bounds.max.y);
+      if (!this.isLeaf) {
+        _ref = [this.nw, this.ne, this.se, this.sw];
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          child = _ref[_i];
+          _results.push(child.draw(ctx));
+        }
+        return _results;
+      }
+    };
+
+    QuadTree.prototype.addItem = function(item) {
+      var child, _i, _len, _ref;
+      if (!this.bounds.containsBox(item.bounds)) {
+        return false;
+      }
+      if (this.isLeaf) {
+        this.items.push(item);
+      } else {
+        _ref = [this.nw, this.ne, this.se, this.sw];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          child = _ref[_i];
+          if (child.bounds.intersects(item.bounds)) {
+            child.addItem(item);
+          }
+        }
+      }
+      if (this.items.length > this.max_items) {
+        this.split();
+      }
+      return true;
+    };
+
+    QuadTree.prototype.query = function(bounds) {
+      var child, results, _i, _len, _ref;
+      results = [];
+      if (!this.bounds.intersects(bounds)) {
+        return [];
+      }
+      if (this.isLeaf) {
+        return this.items;
+      }
+      _ref = [this.nw, this.ne, this.se, this.sw];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        child = _ref[_i];
+        results = results.concat(child.query(bounds));
+      }
+      return result;
+    };
+
+    QuadTree.prototype.split = function() {
+      var c, child, hb, item, qb, _i, _j, _len, _len1, _ref, _ref1;
+      hb = this.bounds.size / 2;
+      qb = hb / 2;
+      c = this.bounds.center;
+      this.nw = new QuadTree(new THREE.terraingen.AABB(new THREE.terraingen.Point(c.x - qb, c.y - qb), hb));
+      this.ne = new QuadTree(new THREE.terraingen.AABB(new THREE.terraingen.Point(c.x + qb, c.y - qb), hb));
+      this.se = new QuadTree(new THREE.terraingen.AABB(new THREE.terraingen.Point(c.x + qb, c.y + qb), hb));
+      this.sw = new QuadTree(new THREE.terraingen.AABB(new THREE.terraingen.Point(c.x - qb, c.y + qb), hb));
+      while (this.items.length) {
+        item = this.items.pop();
+        if (item instanceof THREE.terraingen.QuadTreePointItem) {
+          _ref = [this.nw, this.ne, this.se, this.sw];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            child = _ref[_i];
+            if (child.bounds.containsPoint(item.position)) {
+              child.addPointItem(item);
+            }
+          }
+        } else {
+          _ref1 = [this.nw, this.ne, this.se, this.sw];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            child = _ref1[_j];
+            if (child.bounds.intersects(item.bounds)) {
+              child.addItem(item);
+            }
+          }
+        }
+      }
+      return this.isLeaf = false;
+    };
+
+    return QuadTree;
+
+  })();
 
   window.TerrainWorker = {
     ready: false,
