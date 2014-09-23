@@ -102,18 +102,23 @@ class THREE.terraingen.QuadTree
     
 
     #ctx.beginPath()
-    #ctx.strokeStyle="red"
+    ctx.strokeStyle="red"
     #ctx.fillStyle = "black"
-    #ctx.lineWidth="2"
-    ctx.rect @bounds.min.x, @bounds.min.y, @bounds.max.x, @bounds.max.y
+    ctx.lineWidth="0.5"
+    ctx.moveTo @bounds.min.x, @bounds.min.y
+    ctx.lineTo @bounds.max.x, @bounds.min.y
+    ctx.lineTo @bounds.max.x, @bounds.max.y
+    ctx.lineTo @bounds.min.x, @bounds.max.y
+    ctx.lineTo @bounds.min.x, @bounds.min.y
+    ctx.stroke()
     
-    #if @isLeaf
-    #  for p in @items
-    #    if p instanceof THREE.terraingen.QuadTreePointItem
-    #      ctx.fillStyle = 'yellow'
-    #      ctx.beginPath()
-    #      ctx.rect p.position.x-3, p.position.y-3, 6, 6
-    #      ctx.fill()
+    if @isLeaf
+      for p in @items
+        if p instanceof THREE.terraingen.QuadTreePointItem
+          ctx.fillStyle = 'yellow'
+          ctx.beginPath()
+          ctx.rect p.position.x-3, p.position.y-3, 6, 6
+          ctx.fill()
     #else
     if not @isLeaf
       for child in [@nw, @ne, @se, @sw]

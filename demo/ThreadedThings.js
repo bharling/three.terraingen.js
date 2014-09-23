@@ -158,13 +158,32 @@
     };
 
     QuadTree.prototype.draw = function(ctx) {
-      var child, _i, _len, _ref, _results;
-      ctx.rect(this.bounds.min.x, this.bounds.min.y, this.bounds.max.x, this.bounds.max.y);
-      if (!this.isLeaf) {
-        _ref = [this.nw, this.ne, this.se, this.sw];
-        _results = [];
+      var child, p, _i, _j, _len, _len1, _ref, _ref1, _results;
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = "0.5";
+      ctx.moveTo(this.bounds.min.x, this.bounds.min.y);
+      ctx.lineTo(this.bounds.max.x, this.bounds.min.y);
+      ctx.lineTo(this.bounds.max.x, this.bounds.max.y);
+      ctx.lineTo(this.bounds.min.x, this.bounds.max.y);
+      ctx.lineTo(this.bounds.min.x, this.bounds.min.y);
+      ctx.stroke();
+      if (this.isLeaf) {
+        _ref = this.items;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          child = _ref[_i];
+          p = _ref[_i];
+          if (p instanceof THREE.terraingen.QuadTreePointItem) {
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            ctx.rect(p.position.x - 3, p.position.y - 3, 6, 6);
+            ctx.fill();
+          }
+        }
+      }
+      if (!this.isLeaf) {
+        _ref1 = [this.nw, this.ne, this.se, this.sw];
+        _results = [];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          child = _ref1[_j];
           _results.push(child.draw(ctx));
         }
         return _results;

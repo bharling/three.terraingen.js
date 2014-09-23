@@ -104,7 +104,7 @@
 			/*
 			 * Pass the terrain worker to catiline to run in threads
 			 */
-			workers = cw(TerrainWorker, 8);
+			workers = cw(TerrainWorker, 2);
 			
 			
 			/*
@@ -288,7 +288,7 @@
 			var bounds = new THREE.terraingen.AABB( new THREE.Vector2(qtSize / 2, qtSize / 2), qtSize);
 			var qt = new THREE.terraingen.QuadTree(bounds);
 			
-			for (var i=0; i<50; i++) {
+			for (var i=0; i<600; i++) {
 				var pos = new THREE.Vector2(  Math.random() * qtSize, Math.random() * qtSize );
 				var item = new THREE.terraingen.QuadTreePointItem(pos, {id:i});
 				qt.addPointItem(item);
