@@ -1,8 +1,4 @@
-THREE = window.THREE or {}
 
-THREE.terraingen = THREE.terraingen || {}
-
-THREE.terraingen.noise = THREE.terraingen.noise || {}
 
 {floor, sqrt, pow, log} = Math
 

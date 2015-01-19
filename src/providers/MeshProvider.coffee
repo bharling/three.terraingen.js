@@ -1,6 +1,4 @@
-THREE = window.THREE or {}
 
-THREE.terraingen = THREE.terraingen || {}
 
 class THREE.terraingen.MeshProvider
   

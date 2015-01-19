@@ -1,8 +1,4 @@
-THREE = window.THREE or {}
 
-THREE.terraingen = THREE.terraingen || {}
-
-THREE.terraingen.generators = THREE.terraingen.generators || {}
 
 
 {floor, sqrt, sin, cos} = Math

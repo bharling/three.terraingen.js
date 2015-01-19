@@ -1,8 +1,5 @@
 {sqrt, floor, abs} = Math
 
-window.THREE or= {}
-
-THREE.terraingen or= {}
 
 class THREE.Vector3Buffer extends Array
   constructor: (@length) ->

@@ -1,10 +1,4 @@
-THREE = window.THREE or {}
 
-THREE.terraingen = THREE.terraingen || {}
-
-THREE.terraingen.filters = THREE.terraingen.filters || {}
-
-THREE.terraingen.features = THREE.terraingen.features || {}
 
 
 class THREE.terraingen.filters.Filter

@@ -1,9 +1,3 @@
-THREE = window.THREE or {}
-
-THREE.terraingen = THREE.terraingen || {}
-
-THREE.terraingen.modifiers = THREE.terraingen.modifiers || {}
-
 
 
 

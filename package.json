@@ -1,0 +1,31 @@
+{
+  "name": "three.terraingen.js",
+  "version": "0.1.0",
+  "description": "Flexible terrain generation in javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bharling/three.terraingen.js.git"
+  },
+  "keywords": [
+    "terrain"
+  ],
+  "author": "Ben Harling",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bharling/three.terraingen.js/issues"
+  },
+  "homepage": "https://github.com/bharling/three.terraingen.js",
+  "devDependencies": {
+    "grunt-cli": "^0.1.13",
+    "grunt": "^0.4.5",
+    "coffee-script": "^1.8.0",
+    "grunt-contrib-coffee": "^0.12.0",
+    "grunt-contrib-uglify": "^0.7.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "jit-grunt": "^0.9.0"
+  }
+}

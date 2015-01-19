@@ -31,19 +31,24 @@
 		
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/three.js/r68/three.js"></script>
 		<script type="text/javascript" src="../dist/libs/catiline.js"></script>
-		<script type="text/javascript" src="../dist/RNGProvider.js"></script>
+		<!-- <script type="text/javascript" src="../dist/RNGProvider.js"></script>
 		<script type="text/javascript" src="../dist/NoiseProvider.js"></script>
 		<script type="text/javascript" src="../dist/NoiseModifierProvider.js"></script>
 		<script type="text/javascript" src="../dist/HeightMapProvider.js"></script>
 		<script type="text/javascript" src="../dist/GeometryProvider.js"></script>
 		<script type="text/javascript" src="../dist/MeshProvider.js"></script>
 		<script type="text/javascript" src="../dist/PatchProvider.js"></script>
-		<script type="text/javascript" src="../dist/FilterProvider.js"></script>
+		<script type="text/javascript" src="../dist/FilterProvider.js"></script> -->
+		
+		<script type="text/javascript" src="../dist/three.terrain.js"></script>
+		
 		<script type="text/javascript" src="ThreadedThings.js"></script>
 		<script type="text/javascript" src="TrackBallControls.js"></script>
 		<script type="text/javascript" src="OrbitControls.js"></script>
 		
 		<script type="text/javascript">
+		
+			
 		
 			/*
 			 * Define a Noise Function by mixing together various generators and modifiers
@@ -76,238 +81,245 @@
 					new THREE.terraingen.modifiers.Constant(1.2)
 				)
 		);*/
+		window.onload = function () {
 		
-		var noiseFunction = new THREE.terraingen.modifiers.Mix (
-			new THREE.terraingen.modifiers.Invert(
-				new THREE.terraingen.modifiers.Abs(
-					new THREE.terraingen.generators.Perlin(
-						new THREE.terraingen.MersenneTwisterProvider(6543654).random, 12, 0.00008
-					) 
+		
+			var noiseFunction = new THREE.terraingen.modifiers.Mix (
+				new THREE.terraingen.modifiers.Invert(
+					new THREE.terraingen.modifiers.Abs(
+						new THREE.terraingen.generators.Perlin(
+							new THREE.terraingen.MersenneTwisterProvider(6543654).random, 12, 0.00008
+						) 
+					)
+				),
+				
+				new THREE.terraingen.generators.Perlin(
+					new THREE.terraingen.MersenneTwisterProvider(3234).random, 4, 0.00002
+				),
+				
+				new THREE.terraingen.generators.Perlin(
+					new THREE.terraingen.MersenneTwisterProvider(19029).random, 4, 0.00004
 				)
-			),
-			
-			new THREE.terraingen.generators.Perlin(
-				new THREE.terraingen.MersenneTwisterProvider(3234).random, 4, 0.00002
-			),
-			
-			new THREE.terraingen.generators.Perlin(
-				new THREE.terraingen.MersenneTwisterProvider(19029).random, 4, 0.00004
 			)
-		)
-			
-			
-			/*
-			 * Assign this to the global terrain worker
-			 */
-			TerrainWorker.noiseGenerator = noiseFunction;
-			
-			/*
-			 * Pass the terrain worker to catiline to run in threads
-			 */
-			workers = cw(TerrainWorker, 2);
-			
-			
-			/*
-			 * Lets setup some numbers
-			 */
-			
-			// Number of tiles to pre-generate
-			var NUM_TILES = 16;
-			
-			// Number of vertices per side of each tile
-			// MUST be 2^n+1 for BTT
-			var SEGMENTS = 65;
-			
-			// The siz in world units of each tile
-			var TILE_SIZE = SEGMENTS * 100;
-			
-			// Total number of vertices we're going to put in the scene
-			var NUM_VERTS = SEGMENTS * SEGMENTS * 3;
-			
-			// Let's see what that is
-			console.log ("total verts = ", NUM_VERTS * NUM_TILES);
-			
-			// A queue in which completed tiles are put to be added to the scene
-			var buildQueue = [];
-			
-			// the point at which to start building tiles
-			var origin = -((NUM_TILES * TILE_SIZE) / 2);
-			
-			// 2D world center
-			var center = new THREE.Vector2(0,0);
-			
-			// The array of tiles to build
-			var tiles = [];
-			
-			
-			var max_dist = new THREE.Vector2(0,0).distanceTo(new THREE.Vector2(origin, origin));
-			
-			
-			// Create the basic THREE.js scene
-			var scene, renderer, camera, controls;
-			function createScene () {
-				 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 18000);
-			 		camera.position.z = 2000;
-			 		camera.position.x = 2000;
-			 		camera.position.y = 4000;
-			 		scene = new THREE.Scene();
-			 		renderer = new THREE.WebGLRenderer();
-			 		renderer.setSize( window.innerWidth, window.innerHeight );
-			 		document.body.appendChild(renderer.domElement);
-			 		controls = new THREE.OrbitControls(camera);
-			}
-			createScene();
-			
-			/*
-			 * A function to take completed tiles and build them into THREE.js buffergeometries
-			 */
-			function buildGeometry (data) {
-				/*console.log(data);
-				var indices = new ( ( data.vertices.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( data.segments * data.segments * 6 );
-				var seg1 = data.segments+1;
-				var offset = 0;
-				for (var iy=0; iy<data.segments; iy++) {
-					for (var ix=0; ix<data.segments; ix++) {
-						var a = ix + seg1 * iy;
-						var b = ix + seg1 * ( iy + 1 );
-						var c = ( ix + 1 ) + seg1 * ( iy + 1 );
-						var d = ( ix + 1 ) + seg1 * iy;
-			
-						indices[ offset     ] = a;
-						indices[ offset + 1 ] = b;
-						indices[ offset + 2 ] = d;
-			
-						indices[ offset + 3 ] = b;
-						indices[ offset + 4 ] = c;
-						indices[ offset + 5 ] = d;
-			
-						offset += 6; 
+				
+				
+				/*
+				 * Assign this to the global terrain worker
+				 */
+				TerrainWorker.noiseGenerator = noiseFunction;
+				
+				/*
+				 * Pass the terrain worker to catiline to run in threads
+				 */
+				workers = cw(TerrainWorker, 2);
+				
+				
+				/*
+				 * Lets setup some numbers
+				 */
+				
+				// Number of tiles to pre-generate
+				var NUM_TILES = 16;
+				
+				// Number of vertices per side of each tile
+				// MUST be 2^n+1 for BTT
+				var SEGMENTS = 33;
+				
+				// The siz in world units of each tile
+				var TILE_SIZE = SEGMENTS * 32;
+				
+				// Total number of vertices we're going to put in the scene
+				var NUM_VERTS = SEGMENTS * SEGMENTS * 3;
+				
+				// Let's see what that is
+				console.log ("total verts = ", NUM_VERTS * NUM_TILES);
+				
+				// A queue in which completed tiles are put to be added to the scene
+				var buildQueue = [];
+				
+				// the point at which to start building tiles
+				var origin = -((NUM_TILES * TILE_SIZE) / 2);
+				
+				// 2D world center
+				var center = new THREE.Vector2(0,0);
+				
+				// The array of tiles to build
+				var tiles = [];
+				
+				
+				var max_dist = new THREE.Vector2(0,0).distanceTo(new THREE.Vector2(origin, origin));
+				
+				
+				// Create the basic THREE.js scene
+				var scene, renderer, camera, controls;
+				function createScene () {
+					 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 180000);
+				 		camera.position.z = 2000;
+				 		camera.position.x = 2000;
+				 		camera.position.y = 4000;
+				 		scene = new THREE.Scene();
+				 		renderer = new THREE.WebGLRenderer();
+				 		renderer.setSize( window.innerWidth, window.innerHeight );
+				 		document.body.appendChild(renderer.domElement);
+				 		controls = new THREE.OrbitControls(camera);
+				}
+				createScene();
+				
+				/*
+				 * A function to take completed tiles and build them into THREE.js buffergeometries
+				 */
+				function buildGeometry (data) {
+					/*console.log(data);
+					var indices = new ( ( data.vertices.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( data.segments * data.segments * 6 );
+					var seg1 = data.segments+1;
+					var offset = 0;
+					for (var iy=0; iy<data.segments; iy++) {
+						for (var ix=0; ix<data.segments; ix++) {
+							var a = ix + seg1 * iy;
+							var b = ix + seg1 * ( iy + 1 );
+							var c = ( ix + 1 ) + seg1 * ( iy + 1 );
+							var d = ( ix + 1 ) + seg1 * iy;
+				
+							indices[ offset     ] = a;
+							indices[ offset + 1 ] = b;
+							indices[ offset + 2 ] = d;
+				
+							indices[ offset + 3 ] = b;
+							indices[ offset + 4 ] = c;
+							indices[ offset + 5 ] = d;
+				
+							offset += 6; 
+						}
+					}*/
+					
+					var geom = new THREE.BufferGeometry();
+					geom.addAttribute( 'index', new THREE.BufferAttribute( data.indices, 1 ));
+					geom.addAttribute( 'position', new THREE.BufferAttribute( data.vertices.buf, 3 ) );
+					geom.computeFaceNormals();
+				    geom.computeVertexNormals(true);
+					var material = new THREE.MeshNormalMaterial();
+					var mesh = new THREE.Mesh(geom, material);
+					//var helper = new THREE.WireframeHelper(mesh);
+					scene.add(mesh);
+					mesh.position.x = data.bounds.min.x;
+					mesh.position.z = data.bounds.min.y;
+					mesh.scale.y = 2.0;
+				}
+				
+				
+				
+				/*
+				 * Fill up an initial array of tiles to build
+				 */
+				
+				var _variance = 100;
+				
+				for (var i=0; i<NUM_TILES; i++ ) {
+					
+					var _x = origin + (i * TILE_SIZE);
+	
+					for (var j=0; j<NUM_TILES; j++) {
+						
+						var _y = origin + (j * TILE_SIZE);
+						
+						var bounds = new THREE.Box2( new THREE.Vector2( _x, _y ), new THREE.Vector2( _x + TILE_SIZE, _y + TILE_SIZE ) );
+						var dist = center.distanceTo(bounds.center());
+						_variance = 50 * (dist / max_dist);
+						
+						var params = {
+							bounds: bounds,
+							distance: dist,
+							segments: SEGMENTS,
+							octaves:12,
+							scale:0.005,
+							seed:623424322,
+							//vertices: new Float32Array ( (SEGMENTS + 1) * (SEGMENTS+1) * 3 )
+							vertices: new THREE.Vector3Buffer ( (SEGMENTS + 1) * (SEGMENTS+1) ),
+							variance: _variance
+						};
+						
+						
+						
+						tiles.push (params);
 					}
-				}*/
-				
-				var geom = new THREE.BufferGeometry();
-				geom.addAttribute( 'index', new THREE.BufferAttribute( data.indices, 1 ));
-				geom.addAttribute( 'position', new THREE.BufferAttribute( data.vertices.buf, 3 ) );
-				geom.computeFaceNormals();
-			    geom.computeVertexNormals(true);
-				var material = new THREE.MeshNormalMaterial();
-				var mesh = new THREE.Mesh(geom, material);
-				//var helper = new THREE.WireframeHelper(mesh);
-				scene.add(mesh);
-				mesh.position.x = data.bounds.min.x;
-				mesh.position.z = data.bounds.min.y;
-			}
-			
-			
-			
-			/*
-			 * Fill up an initial array of tiles to build
-			 */
-			
-			var _variance = 100;
-			
-			for (var i=0; i<NUM_TILES; i++ ) {
-				
-				var _x = origin + (i * TILE_SIZE);
-
-				for (var j=0; j<NUM_TILES; j++) {
-					
-					var _y = origin + (j * TILE_SIZE);
-					
-					var bounds = new THREE.Box2( new THREE.Vector2( _x, _y ), new THREE.Vector2( _x + TILE_SIZE, _y + TILE_SIZE ) );
-					var dist = center.distanceTo(bounds.center());
-					_variance = 50 * (dist / max_dist);
-					
-					var params = {
-						bounds: bounds,
-						distance: dist,
-						segments: SEGMENTS,
-						octaves:12,
-						scale:0.005,
-						seed:623424322,
-						//vertices: new Float32Array ( (SEGMENTS + 1) * (SEGMENTS+1) * 3 )
-						vertices: new THREE.Vector3Buffer ( (SEGMENTS + 1) * (SEGMENTS+1) ),
-						variance: _variance
-					};
-					
-					
-					
-					tiles.push (params);
 				}
-			}
-			
-			/*
-			 * Sort them by distance to the camera ( TODO: This doesn't seem to affect build order )
-			 */
-			tiles = tiles.sort(function (a, b) {
-				if (a.dist < b.dist) {
-					return -1;
-				} else if (a.dist > b.dist) {
-					return 1;
-				} else {
-					return 0;
-				}
-			});
-			
-			/*
-			 * Push the tiles to the workers to process
-			 */
-			for (var i=0; i<tiles.length; i++ ) {
-				workers.getDataArrays(tiles[i]).then( function (data) {
-					buildQueue.push(data);
-				}, function (err, something, other) {
-					console.log(err, something, other);
+				
+				/*
+				 * Sort them by distance to the camera ( TODO: This doesn't seem to affect build order )
+				 */
+				tiles = tiles.sort(function (a, b) {
+					if (a.dist < b.dist) {
+						return -1;
+					} else if (a.dist > b.dist) {
+						return 1;
+					} else {
+						return 0;
+					}
 				});
+				
+				/*
+				 * Push the tiles to the workers to process
+				 */
+				for (var i=0; i<tiles.length; i++ ) {
+					workers.getDataArrays(tiles[i]).then( function (data) {
+						buildQueue.push(data);
+					}, function (err, something, other) {
+						console.log(err, something, other);
+					});
+				}
+	
+				/*
+				 * Standard THREE.js update and render loop
+				 */
+				function animate () {
+			 		requestAnimationFrame(animate);
+			 		if (buildQueue.length) {
+			 			buildGeometry(buildQueue.pop())
+			 		}
+			 		controls.update();
+			 		render();
+			 	}
+				
+			 	
+			 	function render () {
+			 		var time = Date.now() * 0.001;
+					renderer.render( scene, camera );
+			 	}
+				
+				/*
+				 * Off we go!
+				 */
+				animate();
+				
+				/* 
+				
+					var qtSize = 512;
+					
+					var bounds = new THREE.terraingen.AABB( new THREE.Vector2(qtSize / 2, qtSize / 2), qtSize);
+					var qt = new THREE.terraingen.QuadTree(bounds);
+					
+					for (var i=0; i<600; i++) {
+						var pos = new THREE.Vector2(  Math.random() * qtSize, Math.random() * qtSize );
+						var item = new THREE.terraingen.QuadTreePointItem(pos, {id:i});
+						qt.addPointItem(item);
+					}
+					
+					var canvas = document.createElement('canvas')
+					canvas.width = canvas.height = qtSize;
+					canvas.style.position = 'absolute';
+					canvas.style.top = '0px';
+					canvas.style.left = '0px';
+					document.body.appendChild(canvas);
+					
+					var ctx = canvas.getContext('2d');
+					
+					qt.draw(ctx);
+					ctx.strokeStyle = "red";
+					ctx.stroke();
+					
+					console.log(qt); 
+				*/
 			}
-
-			/*
-			 * Standard THREE.js update and render loop
-			 */
-			function animate () {
-		 		requestAnimationFrame(animate);
-		 		if (buildQueue.length) {
-		 			buildGeometry(buildQueue.pop())
-		 		}
-		 		controls.update();
-		 		render();
-		 	}
-			
-		 	
-		 	function render () {
-		 		var time = Date.now() * 0.001;
-				renderer.render( scene, camera );
-		 	}
-			
-			/*
-			 * Off we go!
-			 */
-			animate();
-			
-			var qtSize = 512;
-			
-			var bounds = new THREE.terraingen.AABB( new THREE.Vector2(qtSize / 2, qtSize / 2), qtSize);
-			var qt = new THREE.terraingen.QuadTree(bounds);
-			
-			for (var i=0; i<600; i++) {
-				var pos = new THREE.Vector2(  Math.random() * qtSize, Math.random() * qtSize );
-				var item = new THREE.terraingen.QuadTreePointItem(pos, {id:i});
-				qt.addPointItem(item);
-			}
-			
-			var canvas = document.createElement('canvas')
-			canvas.width = canvas.height = qtSize;
-			canvas.style.position = 'absolute';
-			canvas.style.top = '0px';
-			canvas.style.left = '0px';
-			document.body.appendChild(canvas);
-			
-			var ctx = canvas.getContext('2d');
-			
-			qt.draw(ctx);
-			ctx.strokeStyle = "red";
-			ctx.stroke();
-			
-			console.log(qt);
 			
 			
 			
